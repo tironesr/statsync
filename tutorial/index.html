@@ -339,6 +339,83 @@
                 flex-direction: column;
             }
         }
+
+        /* --- SIDEBAR MOCKUP --- */
+        .sidebar-mockup {
+            width: 260px;
+            background: #ffffff;
+            border: 1px solid #e1e4e8;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #24292e;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            color: white;
+            padding: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-search {
+            padding: 10px 14px;
+            background: #f6f8fa;
+            margin: 12px;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            color: #6a737d;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-card {
+            background: white;
+            margin: 0 12px 12px;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-term {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #8b5cf6;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.825rem;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .stat-val {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .p-v {
+            color: #059669;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -384,16 +461,20 @@
 
                 <div class="card">
                     <i data-lucide="refresh-ccw" size="32"></i>
-                    <h3>Push Your Models</h3>
-                    <p>No extra steps needed. Simply pass your raw model objects to <code>sync_update()</code> to make
-                        them
-                        available in Word.</p>
-                    <pre><code><span class="r-comment"># Push specific models</span>
-model1 <- <span class="r-func">lm</span>(mpg ~ wt, <span class="r-func">data</span> = mtcars)
-<span class="r-func">sync_update</span>(model1)
+                    <h3>Push & Manage</h3>
+                    <p>Passing raw models to <code>sync_update()</code> automatically extracts and refreshes data in
+                        Word. You can also prune or clear your session.</p>
+                    <pre><code><span class="r-comment"># Refresh specific models</span>
+<span class="r-func">sync_update</span>(model1, model2)
 
-<span class="r-comment"># Push multiple models</span>
-<span class="r-func">sync_update</span>(model1, model2)</code></pre>
+<span class="r-comment"># Prune stale models (no quotes needed)</span>
+<span class="r-func">sync_delete</span>(old_model)
+
+<span class="r-comment"># Clear all models from the bridge</span>
+<span class="r-func">sync_clear</span>()
+
+<span class="r-comment"># Stop the bridge</span>
+<span class="r-func">sync_stop</span>()</code></pre>
                 </div>
             </div>
 
@@ -457,8 +538,68 @@ model1 <- <span class="r-func">lm</span>(mpg ~ wt, <span class="r-func">data</sp
                     <p>Need more control? Use the sidebar to browse your models, filter by test type, and select
                         specific parts (like just the p-value) for custom phrasing.</p>
                 </div>
+                <!-- SIDEBAR MOCKUP -->
                 <div class="step-visual">
-                    <img src="./assets/sidebar.png" alt="Word Sidebar Mockup">
+                    <div class="sidebar-mockup">
+                        <div class="sidebar-header"
+                            style="background: #fff; color: #2b579a; border-bottom: 2px solid #2b579a; padding: 12px 16px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span style="font-weight: 800; font-size: 1.1rem; font-family: 'Outfit';">📊
+                                    StatSync</span>
+                                <span
+                                    style="font-size: 0.65rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666;">v1.0</span>
+                            </div>
+                        </div>
+
+                        <div
+                            style="padding: 12px; background: #f3f6f9; border-bottom: 1px solid #ddd; display: flex; gap: 8px;">
+                            <div
+                                style="background: #22c55e; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                <div style="width: 6px; height: 6px; background: white; border-radius: 50%;"></div> Live
+                            </div>
+                            <div
+                                style="border: 1px solid #2b579a; color: #2b579a; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                                Open File</div>
+                        </div>
+
+                        <div class="sidebar-search" style="margin: 12px; background: white; border: 1px solid #ccc;">
+                            <i data-lucide="search" size="14"></i>
+                            <span style="color: #999;">Search models...</span>
+                        </div>
+
+                        <div style="display: flex; gap: 6px; padding: 0 12px 12px; overflow-x: auto;">
+                            <span
+                                style="font-size: 0.65rem; background: #2b579a; color: white; padding: 3px 8px; border-radius: 99px;">All</span>
+                            <span
+                                style="font-size: 0.65rem; border: 1px solid #ccc; color: #666; padding: 3px 8px; border-radius: 99px;">Regression</span>
+                            <span
+                                style="font-size: 0.65rem; border: 1px solid #ccc; color: #666; padding: 3px 8px; border-radius: 99px;">Descriptive</span>
+                        </div>
+
+                        <div class="sidebar-card" style="border-left: 3px solid #8b5cf6;">
+                            <div class="card-term">
+                                <span>mpg_model (wt)</span>
+                                <i data-lucide="info" size="14" style="color: #ccc;"></i>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #666; margin-bottom: 8px;">Linear Model Coefficients
+                            </div>
+                            <div class="card-stat-row">
+                                <span>Estimate (b)</span>
+                                <span class="stat-val">-5.344</span>
+                            </div>
+                            <div class="card-stat-row">
+                                <span>p-value</span>
+                                <span class="stat-val p-v">&lt; .001</span>
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-top: auto; border-top: 1px solid #eee; padding: 10px 12px; background: #fafafa; display: flex; justify-content: space-between; font-size: 0.65rem; color: #999;">
+                            <span>Project: My Thesis</span>
+                            <span>Sync OK</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -466,25 +607,28 @@ model1 <- <span class="r-func">lm</span>(mpg ~ wt, <span class="r-func">data</sp
         <!-- SYNC SECTION -->
         <section id="sync">
             <div class="section-header">
-                <h2>Real-Time Sync</h2>
-                <p>Data changed in R? No problem.</p>
+                <h2>The Magic of Auto-Update</h2>
+                <p>Linked coefficients update themselves.</p>
             </div>
 
-            <div class="card" style="margin-bottom: 2rem;">
+            <div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--accent-primary);">
                 <div style="display: flex; gap: 2rem; align-items: center;">
-                    <div style="flex: 1;">
-                        <h3>The Live Connection</h3>
-                        <p>Run <code>sync_serve()</code> in R to start a local server. The Word add-in connects
-                            instantly, providing real-time updates as you refine your analysis.</p>
-                        <pre><code><span class="r-func">sync_serve</span>(project_name = <span class="r-str">"Thesis"</span>)
-<span class="r-comment"># After re-running models:</span>
-<span class="r-func">sync_update</span>()</code></pre>
+                    <div style="flex: 1.5;">
+                        <h3>Zero-Effort Refresh</h3>
+                        <p>Once you've inserted a statistic into Word, it stays linked. If you change your data or
+                            refine your model in R, just call <code>sync_update()</code> again. </p>
+                        <p style="margin-top: 1rem; color: var(--accent-primary); font-weight: 600;">Every instance of
+                            that model's coefficients in your Word document will update automatically to the latest
+                            values.</p>
+                        <pre><code><span class="r-comment"># Update model - Word reflects this instantly!</span>
+<span class="r-func">sync_update</span>(model1)</code></pre>
                     </div>
-                    <div style="flex: 1; text-align: center;">
+                    <div
+                        style="flex: 1; text-align: center; background: rgba(139, 92, 246, 0.05); padding: 2rem; border-radius: 16px;">
                         <i data-lucide="refresh-cw" size="64"
-                            style="margin: 0 auto; animation: rotate 4s linear infinite;"></i>
-                        <p style="margin-top: 1rem; color: var(--accent-primary); font-weight: bold;">BIDIRECTIONAL FLOW
-                        </p>
+                            style="margin: 0 auto; color: var(--accent-primary); animation: rotate 4s linear infinite;"></i>
+                        <p style="margin-top: 1.5rem; color: #fff; font-weight: bold; font-family: 'Outfit';">LIVE LINK
+                            ACTIVE</p>
                     </div>
                 </div>
             </div>

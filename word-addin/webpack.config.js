@@ -7,7 +7,7 @@ const devCerts = require("office-addin-dev-certs");
 module.exports = async (env, options) => {
   const dev = options.mode === "development";
 
-  // Get HTTPS certs for local dev (Office add-ins require HTTPS)
+  // Only get HTTPS certs for local dev (CI build doesn't need them)
   const httpsOptions = dev ? await devCerts.getHttpsServerOptions() : {};
 
   return {

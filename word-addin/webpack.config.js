@@ -2,13 +2,15 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
-const devCerts = require("office-addin-dev-certs");
-
 module.exports = async (env, options) => {
   const dev = options.mode === "development";
 
-  // Only get HTTPS certs for local dev (CI build doesn't need them)
-  const httpsOptions = dev ? await devCerts.getHttpsServerOptions() : {};
+  // Only load and use dev certs during local development
+  let httpsOptions = {};
+  if (dev) {
+    const devCerts = require("office-addin-dev-certs");
+    httpsOptions = await devCerts.getHttpsServerOptions();
+  }
 
   return {
     entry: {

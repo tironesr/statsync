@@ -1,0 +1,7 @@
+m1 <- lm(mpg ~ wt, data=mtcars)
+m2 <- lm(mpg ~ wt + hp, data=mtcars)
+a1 <- anova(m1, m2)
+cat("Attributes:\n")
+print(names(attributes(a1)))
+cat("\nHeading:\n")
+print(attr(a1, "heading"))

@@ -1,0 +1,168 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Untitled Analysis",
+    "r_version": "4.4.3",
+    "hash": null
+  },
+  "generated_at": "2026-03-05T18:42:45-0800",
+  "options": {
+    "style": "apa7",
+    "decimal_places": 2,
+    "leading_zero": true,
+    "thousands_separator": false
+  },
+  "statistics": [
+    {
+      "id": "data_frame_explorer.Sepal.Length",
+      "label": "Sepal.Length",
+      "group": "Data Frame Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 5.84, {i}SD{/i} = 0.83",
+      "formatted_parts": {
+        "mean": "5.84",
+        "sd": "0.83",
+        "median": "5.80",
+        "min": "4.30",
+        "max": "7.90",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 5.8433,
+        "sd": 0.8281,
+        "median": 5.8,
+        "min": 4.3,
+        "max": 7.9,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "data_frame_explorer.Sepal.Width",
+      "label": "Sepal.Width",
+      "group": "Data Frame Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 3.06, {i}SD{/i} = 0.44",
+      "formatted_parts": {
+        "mean": "3.06",
+        "sd": "0.44",
+        "median": "3.00",
+        "min": "2.00",
+        "max": "4.40",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 3.0573,
+        "sd": 0.4359,
+        "median": 3,
+        "min": 2,
+        "max": 4.4,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "data_frame_explorer.Petal.Length",
+      "label": "Petal.Length",
+      "group": "Data Frame Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 3.76, {i}SD{/i} = 1.77",
+      "formatted_parts": {
+        "mean": "3.76",
+        "sd": "1.77",
+        "median": "4.35",
+        "min": "1.00",
+        "max": "6.90",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 3.758,
+        "sd": 1.7653,
+        "median": 4.35,
+        "min": 1,
+        "max": 6.9,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "data_frame_explorer.Petal.Width",
+      "label": "Petal.Width",
+      "group": "Data Frame Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 1.20, {i}SD{/i} = 0.76",
+      "formatted_parts": {
+        "mean": "1.20",
+        "sd": "0.76",
+        "median": "1.30",
+        "min": "0.10",
+        "max": "2.50",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 1.1993,
+        "sd": 0.7622,
+        "median": 1.3,
+        "min": 0.1,
+        "max": 2.5,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "disp.disp",
+      "label": "disp",
+      "group": "disp",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 230.72, {i}SD{/i} = 123.94",
+      "formatted_parts": {
+        "mean": "230.72",
+        "sd": "123.94",
+        "median": "196.30",
+        "min": "71.10",
+        "max": "472.00",
+        "n": "32"
+      },
+      "raw": {
+        "mean": 230.7219,
+        "sd": 123.9387,
+        "median": 196.3,
+        "min": 71.1,
+        "max": 472,
+        "n": 32,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "wt.wt",
+      "label": "wt",
+      "group": "Should Affect mtcars",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 3.22, {i}SD{/i} = 0.98",
+      "formatted_parts": {
+        "mean": "3.22",
+        "sd": "0.98",
+        "median": "3.33",
+        "min": "1.51",
+        "max": "5.42",
+        "n": "32"
+      },
+      "raw": {
+        "mean": 3.2172,
+        "sd": 0.9785,
+        "median": 3.325,
+        "min": 1.513,
+        "max": 5.424,
+        "n": 32,
+        "n_missing": 0
+      },
+      "context": []
+    }
+  ],
+  "tables": []
+}

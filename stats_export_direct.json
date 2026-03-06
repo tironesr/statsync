@@ -1,0 +1,600 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Untitled Analysis",
+    "r_version": "4.4.3",
+    "hash": null
+  },
+  "generated_at": "2026-03-05T18:10:32-0800",
+  "options": {
+    "style": "apa7",
+    "decimal_places": 2,
+    "leading_zero": true,
+    "thousands_separator": false
+  },
+  "statistics": [
+    {
+      "id": "iris_explorer.Sepal.Length",
+      "label": "Sepal.Length",
+      "group": "Iris Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 5.84, {i}SD{/i} = 0.83",
+      "formatted_parts": {
+        "mean": "5.84",
+        "sd": "0.83",
+        "median": "5.80",
+        "min": "4.30",
+        "max": "7.90",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 5.8433,
+        "sd": 0.8281,
+        "median": 5.8,
+        "min": 4.3,
+        "max": 7.9,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "iris_explorer.Sepal.Width",
+      "label": "Sepal.Width",
+      "group": "Iris Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 3.06, {i}SD{/i} = 0.44",
+      "formatted_parts": {
+        "mean": "3.06",
+        "sd": "0.44",
+        "median": "3.00",
+        "min": "2.00",
+        "max": "4.40",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 3.0573,
+        "sd": 0.4359,
+        "median": 3,
+        "min": 2,
+        "max": 4.4,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "iris_explorer.Petal.Length",
+      "label": "Petal.Length",
+      "group": "Iris Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 3.76, {i}SD{/i} = 1.77",
+      "formatted_parts": {
+        "mean": "3.76",
+        "sd": "1.77",
+        "median": "4.35",
+        "min": "1.00",
+        "max": "6.90",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 3.758,
+        "sd": 1.7653,
+        "median": 4.35,
+        "min": 1,
+        "max": 6.9,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "iris_explorer.Petal.Width",
+      "label": "Petal.Width",
+      "group": "Iris Explorer",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 1.20, {i}SD{/i} = 0.76",
+      "formatted_parts": {
+        "mean": "1.20",
+        "sd": "0.76",
+        "median": "1.30",
+        "min": "0.10",
+        "max": "2.50",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 1.1993,
+        "sd": 0.7622,
+        "median": 1.3,
+        "min": 0.1,
+        "max": 2.5,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "linear_model.omnibus",
+      "label": "Linear Model - Overall Model",
+      "group": "Linear Model",
+      "type": "model_fit",
+      "formatted": "{i}F{/i}(1, 30) = 91.38, {i}p{/i} < .001, {i}R{/i}² = .753, {i}R{/i}²adj = .745",
+      "formatted_parts": {
+        "F_value": "91.38",
+        "df1": "1",
+        "df2": "30",
+        "p": "< .001",
+        "r_squared": ".753",
+        "adj_r_squared": ".745",
+        "n": "32",
+        "df_residual": "30"
+      },
+      "raw": {
+        "f_statistic": 91.3753,
+        "df1": 1,
+        "df2": 30,
+        "p_value": 1.294e-10,
+        "r_squared": 0.7528,
+        "adj_r_squared": 0.7446,
+        "aic": 166.0294,
+        "bic": 170.4266,
+        "n": 32,
+        "df_residual": 30
+      },
+      "context": []
+    },
+    {
+      "id": "linear_model._Intercept_",
+      "label": "Linear Model - (Intercept)",
+      "group": "Linear Model",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = 37.29, {i}SE{/i} = 1.88, 95% CI [33.45, 41.12], {i}t{/i}(30) = 19.86, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "37.29",
+        "se": "1.88",
+        "t": "19.86",
+        "df_residual": "30",
+        "t_with_df": "{i}t{/i}(30) = 19.86",
+        "p": "< .001",
+        "ci_lower": "33.45",
+        "ci_upper": "41.12",
+        "partial_eta_sq": null
+      },
+      "raw": {
+        "estimate": 37.2851,
+        "std_error": 1.8776,
+        "statistic": 19.8576,
+        "p_value": 8.2418e-19,
+        "conf_low": 33.4505,
+        "conf_high": 41.1198,
+        "df_residual": 30,
+        "partial_eta_sq": null
+      },
+      "context": []
+    },
+    {
+      "id": "linear_model.wt",
+      "label": "Linear Model - wt",
+      "group": "Linear Model",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = -5.34, {i}SE{/i} = 0.56, 95% CI [-6.49, -4.20], {i}t{/i}(30) = -9.56, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "-5.34",
+        "se": "0.56",
+        "t": "-9.56",
+        "df_residual": "30",
+        "t_with_df": "{i}t{/i}(30) = -9.56",
+        "p": "< .001",
+        "ci_lower": "-6.49",
+        "ci_upper": "-4.20",
+        "partial_eta_sq": ".753"
+      },
+      "raw": {
+        "estimate": -5.3445,
+        "std_error": 0.5591,
+        "statistic": -9.559,
+        "p_value": 1.294e-10,
+        "conf_low": -6.4863,
+        "conf_high": -4.2026,
+        "df_residual": 30,
+        "partial_eta_sq": 0.7528
+      },
+      "context": []
+    },
+    {
+      "id": "nested_model_comparison.mpg___wt___hp",
+      "label": "mpg ~ wt + hp",
+      "group": "Nested Model Comparison",
+      "type": "f_test",
+      "formatted": "{i}F{/i}(1, 29) = 12.38, {i}p{/i} = .001",
+      "formatted_parts": {
+        "statistic": "12.38",
+        "F_value": "12.38",
+        "df1": "1",
+        "df2": "29",
+        "p": "= .001"
+      },
+      "raw": {
+        "statistic": 12.3813,
+        "df1": 1,
+        "df2": 29,
+        "p_value": 0.0015,
+        "method": "statistic"
+      },
+      "context": []
+    },
+    {
+      "id": "mixed_model.fit",
+      "label": "Mixed Model - Model Fit",
+      "group": "Mixed Model",
+      "type": "model_fit",
+      "formatted": "AIC = 1755.6, BIC = 1774.8",
+      "formatted_parts": {
+        "aic": "1755.6",
+        "bic": "1774.8",
+        "n": "180"
+      },
+      "raw": {
+        "aic": 1755.6283,
+        "bic": 1774.786,
+        "n": 180
+      },
+      "context": []
+    },
+    {
+      "id": "mixed_model._Intercept_",
+      "label": "Mixed Model - (Intercept)",
+      "group": "Mixed Model",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = 251.41, {i}SE{/i} = 6.82, 95% CI [237.01, 265.80], {i}t{/i}(16.9997262884927) = 36.84, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "251.41",
+        "se": "6.82",
+        "t": "36.84",
+        "df_residual": "17.00",
+        "p": "< .001",
+        "ci_lower": "237.01",
+        "ci_upper": "265.80"
+      },
+      "raw": {
+        "estimate": 251.4051,
+        "std_error": 6.8246,
+        "statistic": 36.8381,
+        "p_value": 1.1716e-17,
+        "df_residual": 16.9997,
+        "conf_low": 237.0064,
+        "conf_high": 265.8038
+      },
+      "context": []
+    },
+    {
+      "id": "mixed_model.Days",
+      "label": "Mixed Model - Days",
+      "group": "Mixed Model",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = 10.47, {i}SE{/i} = 1.55, 95% CI [7.21, 13.73], {i}t{/i}(16.9999837255917) = 6.77, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "10.47",
+        "se": "1.55",
+        "t": "6.77",
+        "df_residual": "17.00",
+        "p": "< .001",
+        "ci_lower": "7.21",
+        "ci_upper": "13.73"
+      },
+      "raw": {
+        "estimate": 10.4673,
+        "std_error": 1.5458,
+        "statistic": 6.7715,
+        "p_value": 3.2638e-06,
+        "df_residual": 17,
+        "conf_low": 7.206,
+        "conf_high": 13.7286
+      },
+      "context": []
+    },
+    {
+      "id": "anova_model.block",
+      "label": "ANOVA Model - block",
+      "group": "ANOVA Model",
+      "type": "f_test",
+      "formatted": "{i}F{/i}(5, 18) = 2.32, {i}p{/i} = .086, η²{i}p{/i} = .392",
+      "formatted_parts": {
+        "F_value": "2.32",
+        "df1": "5",
+        "df2": "18",
+        "p": "= .086",
+        "eta_sq": ".392",
+        "partial_eta_sq": ".392"
+      },
+      "raw": {
+        "f_value": 2.3184,
+        "df1": 5,
+        "df2": 18,
+        "p_value": 0.0861,
+        "sum_sq": 343.295,
+        "mean_sq": 68.659,
+        "eta_sq": 0.3917,
+        "partial_eta_sq": 0.3917
+      },
+      "context": []
+    },
+    {
+      "id": "anova_model.Residuals",
+      "label": "ANOVA Model - Residuals",
+      "group": "ANOVA Model",
+      "type": "f_test",
+      "formatted": "{i}F{/i}(18, 18) = NA, NA, η²{i}p{/i} = .500",
+      "formatted_parts": {
+        "F_value": null,
+        "df1": "18",
+        "df2": "18",
+        "p": null,
+        "eta_sq": ".608",
+        "partial_eta_sq": ".500"
+      },
+      "raw": {
+        "f_value": null,
+        "df1": 18,
+        "df2": 18,
+        "p_value": null,
+        "sum_sq": 533.07,
+        "mean_sq": 29.615,
+        "eta_sq": 0.6083,
+        "partial_eta_sq": 0.5
+      },
+      "context": []
+    },
+    {
+      "id": "logistic_regression.fit",
+      "label": "Logistic Regression - Model Fit",
+      "group": "Logistic Regression",
+      "type": "model_fit",
+      "formatted": "AIC = 35.4, BIC = 38.3, Deviance = 31.37",
+      "formatted_parts": {
+        "aic": "35.4",
+        "bic": "38.3",
+        "deviance": "31.37",
+        "null_deviance": "43.86",
+        "n": "32"
+      },
+      "raw": {
+        "aic": 35.3667,
+        "bic": 38.2982,
+        "deviance": 31.3667,
+        "null_deviance": 43.8601,
+        "n": 32
+      },
+      "context": []
+    },
+    {
+      "id": "logistic_regression._Intercept_",
+      "label": "Logistic Regression - (Intercept)",
+      "group": "Logistic Regression",
+      "type": "odds_ratio",
+      "formatted": "OR = 303.29, 95% CI [6.92, 74871.73], {i}p{/i} = .013",
+      "formatted_parts": {
+        "estimate": "303.29",
+        "se": "2.30",
+        "statistic": "2.48",
+        "p": "= .013",
+        "ci_lower": "6.92",
+        "ci_upper": "74871.73"
+      },
+      "raw": {
+        "estimate": 303.2876,
+        "std_error": 2.3014,
+        "statistic": 2.4832,
+        "p_value": 0.013,
+        "conf_low": 6.9172,
+        "conf_high": 74871.7307,
+        "exponentiated": true
+      },
+      "context": []
+    },
+    {
+      "id": "logistic_regression.wt",
+      "label": "Logistic Regression - wt",
+      "group": "Logistic Regression",
+      "type": "odds_ratio",
+      "formatted": "OR = 0.15, 95% CI [0.03, 0.49], {i}p{/i} = .009",
+      "formatted_parts": {
+        "estimate": "0.15",
+        "se": "0.73",
+        "statistic": "-2.62",
+        "p": "= .009",
+        "ci_lower": "0.03",
+        "ci_upper": "0.49"
+      },
+      "raw": {
+        "estimate": 0.148,
+        "std_error": 0.7279,
+        "statistic": -2.6247,
+        "p_value": 0.0087,
+        "conf_low": 0.0263,
+        "conf_high": 0.4881,
+        "exponentiated": true
+      },
+      "context": []
+    },
+    {
+      "id": "nested_logistic_comparison.vs___1",
+      "label": "vs ~ 1",
+      "group": "Nested Logistic Comparison",
+      "type": "chi_square",
+      "formatted": "χ²(NA) = 43.86, NA",
+      "formatted_parts": {
+        "statistic": "43.86",
+        "chi_sq": "43.86",
+        "df": null
+      },
+      "raw": {
+        "statistic": 43.8601,
+        "df1": null,
+        "df2": 31,
+        "p_value": null,
+        "method": "residual.deviance"
+      },
+      "context": []
+    },
+    {
+      "id": "nested_logistic_comparison.vs___wt",
+      "label": "vs ~ wt",
+      "group": "Nested Logistic Comparison",
+      "type": "chi_square",
+      "formatted": "χ²(1) = 31.37, {i}p{/i} < .001",
+      "formatted_parts": {
+        "statistic": "31.37",
+        "chi_sq": "31.37",
+        "df": "1",
+        "p": "< .001"
+      },
+      "raw": {
+        "statistic": 31.3667,
+        "df1": 1,
+        "df2": 30,
+        "p_value": 0.0004,
+        "method": "residual.deviance"
+      },
+      "context": []
+    },
+    {
+      "id": "t_test.result",
+      "label": "T-Test",
+      "group": "T-Test",
+      "type": "t_test",
+      "formatted": "{i}t{/i}(21.98) = -5.43, {i}p{/i} < .001, {i}d{/i} = 1.57",
+      "formatted_parts": {
+        "t": "-5.43",
+        "df": "21.98",
+        "p": "< .001",
+        "d": "1.57",
+        "ci_lower": "-11.05",
+        "ci_upper": "-4.95"
+      },
+      "raw": {
+        "statistic": -5.4349,
+        "df": 21.9822,
+        "p_value": 0,
+        "estimate": [5.5, 13.5],
+        "conf_int": [-11.0528, -4.9472],
+        "cohens_d": 1.5695,
+        "method": "Welch Two Sample t-test"
+      },
+      "context": []
+    },
+    {
+      "id": "chi_square_test.result",
+      "label": "Chi-Square Test",
+      "group": "Chi-Square Test",
+      "type": "chi_square",
+      "formatted": "χ²(4) = 18.04, {i}p{/i} = .001, {i}V{/i} = .531",
+      "formatted_parts": {
+        "chi_sq": "18.04",
+        "df": "4",
+        "p": "= .001",
+        "cramers_v": ".531"
+      },
+      "raw": {
+        "statistic": 18.0364,
+        "df": 4,
+        "p_value": 0.0012,
+        "cramers_v": 0.5309,
+        "n": 32
+      },
+      "context": []
+    },
+    {
+      "id": "correlation_test.result",
+      "label": "Correlation Test",
+      "group": "Correlation Test",
+      "type": "correlation",
+      "formatted": "{i}r{/i}(30) = -.87, 95% CI [-0.93, -0.74], {i}p{/i} < .001",
+      "formatted_parts": {
+        "r": "-.87",
+        "df": "30",
+        "p": "< .001",
+        "ci_lower": "-.93",
+        "ci_upper": "-.74"
+      },
+      "raw": {
+        "estimate": -0.8677,
+        "p_value": 1.294e-10,
+        "parameter": 30,
+        "conf_int": [-0.9338, -0.7441],
+        "method": "pearson"
+      },
+      "context": []
+    },
+    {
+      "id": "v.v",
+      "label": "v",
+      "group": "Vector Naming",
+      "type": "descriptive",
+      "formatted": "{i}M{/i} = 5.84, {i}SD{/i} = 0.83",
+      "formatted_parts": {
+        "mean": "5.84",
+        "sd": "0.83",
+        "median": "5.80",
+        "min": "4.30",
+        "max": "7.90",
+        "n": "150"
+      },
+      "raw": {
+        "mean": 5.8433,
+        "sd": 0.8281,
+        "median": 5.8,
+        "min": 4.3,
+        "max": 7.9,
+        "n": 150,
+        "n_missing": 0
+      },
+      "context": []
+    },
+    {
+      "id": "car__anova.wt",
+      "label": "wt",
+      "group": "car::Anova",
+      "type": "f_test",
+      "formatted": "{i}F{/i}(1, 29) = 37.56, {i}p{/i} < .001",
+      "formatted_parts": {
+        "statistic": "37.56",
+        "F_value": "37.56",
+        "df1": "1",
+        "df2": "29",
+        "p": "< .001"
+      },
+      "raw": {
+        "statistic": 37.5609,
+        "df1": 1,
+        "df2": 29,
+        "p_value": 1.1196e-06,
+        "method": "statistic"
+      },
+      "context": []
+    },
+    {
+      "id": "car__anova.hp",
+      "label": "hp",
+      "group": "car::Anova",
+      "type": "f_test",
+      "formatted": "{i}F{/i}(1, 29) = 12.38, {i}p{/i} = .001",
+      "formatted_parts": {
+        "statistic": "12.38",
+        "F_value": "12.38",
+        "df1": "1",
+        "df2": "29",
+        "p": "= .001"
+      },
+      "raw": {
+        "statistic": 12.3813,
+        "df1": 1,
+        "df2": 29,
+        "p_value": 0.0015,
+        "method": "statistic"
+      },
+      "context": []
+    }
+  ],
+  "tables": []
+}

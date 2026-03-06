@@ -1,0 +1,135 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Iris Test",
+    "r_version": "4.4.3",
+    "hash": null
+  },
+  "generated_at": "2026-03-05T10:06:04-0800",
+  "options": {
+    "style": "apa7",
+    "decimal_places": 2,
+    "leading_zero": true,
+    "thousands_separator": false
+  },
+  "statistics": [
+    {
+      "id": "lm.omnibus",
+      "label": "iris1 - Overall Model",
+      "group": "iris1",
+      "type": "model_fit",
+      "formatted": "{i}F{/i}(2, 147) = 386.39, {i}p{/i} < .001, {i}R{/i}² = .840, {i}R{/i}²adj = .838",
+      "formatted_parts": {
+        "F_value": "386.39",
+        "df1": "2",
+        "df2": "147",
+        "p": "< .001",
+        "r_squared": ".840",
+        "adj_r_squared": ".838",
+        "n": "150",
+        "df_residual": "147"
+      },
+      "raw": {
+        "f_statistic": 386.3862,
+        "df1": 2,
+        "df2": 147,
+        "p_value": 2.9331e-59,
+        "r_squared": 0.8402,
+        "adj_r_squared": 0.838,
+        "aic": 101.0255,
+        "bic": 113.068,
+        "n": 150,
+        "df_residual": 147
+      },
+      "context": []
+    },
+    {
+      "id": "lm._Intercept_",
+      "label": "iris1 - (Intercept)",
+      "group": "iris1",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = 2.25, {i}SE{/i} = 0.25, 95% CI [1.76, 2.74], {i}t{/i}(147) = 9.07, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "2.25",
+        "se": "0.25",
+        "t": "9.07",
+        "df_residual": "147",
+        "t_with_df": "{i}t{/i}(147) = 9.07",
+        "p": "< .001",
+        "ci_lower": "1.76",
+        "ci_upper": "2.74",
+        "partial_eta_sq": null
+      },
+      "raw": {
+        "estimate": 2.2491,
+        "std_error": 0.248,
+        "statistic": 9.0702,
+        "p_value": 7.0385e-16,
+        "conf_low": 1.7591,
+        "conf_high": 2.7392,
+        "df_residual": 147,
+        "partial_eta_sq": null
+      },
+      "context": []
+    },
+    {
+      "id": "lm.Sepal_Width",
+      "label": "iris1 - Sepal.Width",
+      "group": "iris1",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = 0.60, {i}SE{/i} = 0.07, 95% CI [0.46, 0.73], {i}t{/i}(147) = 8.59, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "0.60",
+        "se": "0.07",
+        "t": "8.59",
+        "df_residual": "147",
+        "t_with_df": "{i}t{/i}(147) = 8.59",
+        "p": "< .001",
+        "ci_lower": "0.46",
+        "ci_upper": "0.73",
+        "partial_eta_sq": ".080"
+      },
+      "raw": {
+        "estimate": 0.5955,
+        "std_error": 0.0693,
+        "statistic": 8.5899,
+        "p_value": 1.1633e-14,
+        "conf_low": 0.4585,
+        "conf_high": 0.7325,
+        "df_residual": 147,
+        "partial_eta_sq": 0.0796
+      },
+      "context": []
+    },
+    {
+      "id": "lm.Petal_Length",
+      "label": "iris1 - Petal.Length",
+      "group": "iris1",
+      "type": "coefficient",
+      "formatted": "{i}b{/i} = 0.47, {i}SE{/i} = 0.02, 95% CI [0.44, 0.51], {i}t{/i}(147) = 27.57, {i}p{/i} < .001",
+      "formatted_parts": {
+        "estimate": "0.47",
+        "se": "0.02",
+        "t": "27.57",
+        "df_residual": "147",
+        "t_with_df": "{i}t{/i}(147) = 27.57",
+        "p": "< .001",
+        "ci_lower": "0.44",
+        "ci_upper": "0.51",
+        "partial_eta_sq": ".838"
+      },
+      "raw": {
+        "estimate": 0.4719,
+        "std_error": 0.0171,
+        "statistic": 27.5692,
+        "p_value": 5.8479e-60,
+        "conf_low": 0.4381,
+        "conf_high": 0.5057,
+        "df_residual": 147,
+        "partial_eta_sq": 0.8379
+      },
+      "context": []
+    }
+  ],
+  "tables": []
+}

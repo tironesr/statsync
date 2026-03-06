@@ -1,0 +1,330 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "My First StatSync",
+    "r_version": "4.4.3",
+    "hash": null
+  },
+  "generated_at": "2026-03-04T17:01:58-0800",
+  "options": {
+    "style": "apa7",
+    "decimal_places": 2,
+    "leading_zero": true,
+    "thousands_separator": false
+  },
+  "statistics": [
+    {
+      "id": "ttest1.result",
+      "label": "Transmission Test",
+      "group": "Transmission Test",
+      "type": "t_test",
+      "formatted": "t(18.33) = -3.77, p = .001, d = 1.18",
+      "formatted_parts": {
+        "t": "-3.77",
+        "df": "18.33",
+        "p": "= .001",
+        "d": "1.18",
+        "ci_lower": "-11.28",
+        "ci_upper": "-3.21"
+      },
+      "raw": {
+        "statistic": -3.7671,
+        "df": 18.3323,
+        "p_value": 0.0014,
+        "estimate": [17.1474, 24.3923],
+        "conf_int": [-11.2802, -3.2097],
+        "cohens_d": 1.1815,
+        "method": "Welch Two Sample t-test"
+      },
+      "context": []
+    },
+    {
+      "id": "model1.omnibus",
+      "label": "MPG Model - Overall Model",
+      "group": "MPG Model",
+      "type": "model_fit",
+      "formatted": "F(2, 29) = 69.21, p < .001, R² = .827, R²adj = .815",
+      "formatted_parts": {
+        "F_value": "69.21",
+        "df1": "2",
+        "df2": "29",
+        "p": "< .001",
+        "r_squared": ".827",
+        "adj_r_squared": ".815",
+        "n": "32"
+      },
+      "raw": {
+        "f_statistic": 69.2112,
+        "df1": 2,
+        "df2": 29,
+        "p_value": 9.1091e-12,
+        "r_squared": 0.8268,
+        "adj_r_squared": 0.8148,
+        "aic": 156.6523,
+        "bic": 162.5153,
+        "n": 32
+      },
+      "context": []
+    },
+    {
+      "id": "model1._Intercept_",
+      "label": "MPG Model - (Intercept)",
+      "group": "MPG Model",
+      "type": "coefficient",
+      "formatted": "b = 37.23, SE = 1.60, 95% CI [33.96, 40.50], t = 23.28, p < .001",
+      "formatted_parts": {
+        "estimate": "37.23",
+        "se": "1.60",
+        "t": "23.28",
+        "p": "< .001",
+        "ci_lower": "33.96",
+        "ci_upper": "40.50",
+        "partial_eta_sq": null
+      },
+      "raw": {
+        "estimate": 37.2273,
+        "std_error": 1.5988,
+        "statistic": 23.2847,
+        "p_value": 2.5655e-20,
+        "conf_low": 33.9574,
+        "conf_high": 40.4972,
+        "partial_eta_sq": null
+      },
+      "context": []
+    },
+    {
+      "id": "model1.wt",
+      "label": "MPG Model - wt",
+      "group": "MPG Model",
+      "type": "coefficient",
+      "formatted": "b = -3.88, SE = 0.63, 95% CI [-5.17, -2.58], t = -6.13, p < .001",
+      "formatted_parts": {
+        "estimate": "-3.88",
+        "se": "0.63",
+        "t": "-6.13",
+        "p": "< .001",
+        "ci_lower": "-5.17",
+        "ci_upper": "-2.58",
+        "partial_eta_sq": ".813"
+      },
+      "raw": {
+        "estimate": -3.8778,
+        "std_error": 0.6327,
+        "statistic": -6.1287,
+        "p_value": 1.1196e-06,
+        "conf_low": -5.1719,
+        "conf_high": -2.5837,
+        "partial_eta_sq": 0.813
+      },
+      "context": []
+    },
+    {
+      "id": "model1.hp",
+      "label": "MPG Model - hp",
+      "group": "MPG Model",
+      "type": "coefficient",
+      "formatted": "b = -0.03, SE = 0.01, 95% CI [-0.05, -0.01], t = -3.52, p = .001",
+      "formatted_parts": {
+        "estimate": "-0.03",
+        "se": "0.01",
+        "t": "-3.52",
+        "p": "= .001",
+        "ci_lower": "-0.05",
+        "ci_upper": "-0.01",
+        "partial_eta_sq": ".299"
+      },
+      "raw": {
+        "estimate": -0.0318,
+        "std_error": 0.009,
+        "statistic": -3.5187,
+        "p_value": 0.0015,
+        "conf_low": -0.0502,
+        "conf_high": -0.0133,
+        "partial_eta_sq": 0.2992
+      },
+      "context": []
+    }
+  ],
+  "tables": [
+    {
+      "id": "reg_table_MPG Model",
+      "caption": "Regression Results",
+      "note": "* p < .05. ** p < .01. *** p < .001.",
+      "headers": [
+        [
+          {
+            "label": "",
+            "italic": false,
+            "span": 1
+          },
+          {
+            "label": "MPG Model",
+            "italic": false,
+            "span": 3
+          }
+        ],
+        [
+          {
+            "label": "Predictor",
+            "italic": false,
+            "span": 1
+          },
+          {
+            "label": "b",
+            "italic": true,
+            "span": 1
+          },
+          {
+            "label": "SE",
+            "italic": true,
+            "span": 1
+          },
+          {
+            "label": "p",
+            "italic": true,
+            "span": 1
+          }
+        ]
+      ],
+      "rows": [
+        {
+          "cells": [
+            {
+              "value": "Intercept",
+              "bold": false,
+              "italic": false,
+              "indent": 0
+            },
+            {
+              "value": "37.23***",
+              "stat_id": "MPG Model.(Intercept).estimate"
+            },
+            {
+              "value": "1.60",
+              "stat_id": "MPG Model.(Intercept).se"
+            },
+            {
+              "value": ".000",
+              "stat_id": "MPG Model.(Intercept).p"
+            }
+          ],
+          "is_header": false,
+          "border_bottom": false
+        },
+        {
+          "cells": [
+            {
+              "value": "wt",
+              "bold": false,
+              "italic": false,
+              "indent": 0
+            },
+            {
+              "value": "-3.88***",
+              "stat_id": "MPG Model.wt.estimate"
+            },
+            {
+              "value": "0.63",
+              "stat_id": "MPG Model.wt.se"
+            },
+            {
+              "value": ".000",
+              "stat_id": "MPG Model.wt.p"
+            }
+          ],
+          "is_header": false,
+          "border_bottom": false
+        },
+        {
+          "cells": [
+            {
+              "value": "hp",
+              "bold": false,
+              "italic": false,
+              "indent": 0
+            },
+            {
+              "value": "-0.03**",
+              "stat_id": "MPG Model.hp.estimate"
+            },
+            {
+              "value": "0.01",
+              "stat_id": "MPG Model.hp.se"
+            },
+            {
+              "value": ".001",
+              "stat_id": "MPG Model.hp.p"
+            }
+          ],
+          "is_header": false,
+          "border_bottom": false
+        },
+        {
+          "cells": [
+            {
+              "value": "R²",
+              "italic": true,
+              "indent": 0
+            },
+            {
+              "value": ".827"
+            },
+            {
+              "value": ""
+            },
+            {
+              "value": ""
+            }
+          ],
+          "is_header": false,
+          "border_bottom": false
+        },
+        {
+          "cells": [
+            {
+              "value": "Adjusted R²",
+              "italic": true,
+              "indent": 0
+            },
+            {
+              "value": ".815"
+            },
+            {
+              "value": ""
+            },
+            {
+              "value": ""
+            }
+          ],
+          "is_header": false,
+          "border_bottom": false
+        },
+        {
+          "cells": [
+            {
+              "value": "N",
+              "italic": true,
+              "indent": 0
+            },
+            {
+              "value": "32"
+            },
+            {
+              "value": ""
+            },
+            {
+              "value": ""
+            }
+          ],
+          "is_header": false,
+          "border_bottom": true
+        }
+      ],
+      "style": {
+        "apa_table": true,
+        "font_size": 10,
+        "font_family": "Times New Roman"
+      }
+    }
+  ]
+}

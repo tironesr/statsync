@@ -1,0 +1,59 @@
+---
+title: "MPG Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(statsync)
+```
+
+## Analysis
+
+```{r models}
+# Run your analyses as normal
+ttest_result <- t.test(mpg ~ am, data = mtcars)
+model1 <- lm(mpg ~ wt, data = mtcars)
+model2 <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+aov_result <- aov(mpg ~ factor(cyl) * factor(am), data = mtcars)
+
+# Wrap each result — one line per analysis
+sync_ttest  <- sync_stats(ttest_result, id_prefix = "ttest_trans",
+                           label = "MPG by Transmission")
+sync_model1 <- sync_stats(model1, id_prefix = "m1",
+                           label = "Simple Model")
+sync_model2 <- sync_stats(model2, id_prefix = "m2",
+                           label = "Full Model")
+sync_anova  <- sync_stats(aov_result, id_prefix = "anova_cyl_am",
+                           label = "CYL × AM ANOVA")
+sync_desc   <- sync_stats(mtcars, id_prefix = "desc",
+                           vars = c("mpg", "wt", "hp"),
+                           label = "Descriptives")
+
+# Create tables
+reg_table <- sync_regression_table(
+  `Simple`  = model1,
+  `Full`    = model2
+)
+
+cor_table <- sync_correlation_table(
+  mtcars, vars = c("mpg", "wt", "hp", "disp")
+)
+```
+
+## Inline Usage in RMarkdown
+
+An independent samples t-test showed that vehicles with manual
+transmissions had significantly higher fuel efficiency than automatic,
+`r report(ttest_result)`.
+
+Weight was a significant negative predictor of fuel efficiency,
+`r report(model1, term = "wt")`.
+
+```{r export}
+# Export everything for Word
+sync_export(
+  sync_ttest, sync_model1, sync_model2, sync_anova, sync_desc,
+  reg_table, cor_table,
+  project_name = "MPG Analysis"
+)
+```

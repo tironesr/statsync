@@ -1,0 +1,57 @@
+# Generics
+export(sync_stats)
+export(report)
+
+# S3 method registrations — THIS IS THE KEY PART
+S3method(sync_stats, htest)
+S3method(sync_stats, lm)
+S3method(sync_stats, glm)
+S3method(sync_stats, aov)
+S3method(sync_stats, anova)
+S3method(sync_stats, lmerMod)
+S3method(sync_stats, lmerModLmerTest)
+S3method(sync_stats, data.frame)
+S3method(sync_stats, numeric)
+S3method(sync_stats, default)
+S3method(report, htest)
+S3method(report, lm)
+S3method(report, aov)
+S3method(print, statsync_collection)
+S3method("+", statsync_collection)
+
+# Formatting functions
+export(fmt_p)
+export(fmt_t)
+export(fmt_f)
+export(fmt_r)
+export(fmt_chi)
+export(fmt_ci)
+export(fmt_coef)
+export(fmt_mean_sd)
+export(fmt_mean_se)
+export(format_decimal)
+export(fmt_t_regression)
+
+
+# Table builders
+export(sync_regression_table)
+export(sync_correlation_table)
+
+# Export functions
+export(sync_export)
+export(sync_export_all)
+export(sync_serve)
+
+# Inline reporting
+export(report_desc)
+export(strip_markup)
+
+
+# Imports
+importFrom(jsonlite, toJSON, read_json)
+importFrom(broom, tidy, glance)
+importFrom(dplyr, case_when, bind_rows, left_join)
+importFrom(glue, glue)
+importFrom(stats, anova, cor, cor.test, family, formula,
+           median, na.omit, nobs, pf, sd, t.test)
+importFrom(utils, head)

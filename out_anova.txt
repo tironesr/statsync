@@ -1,0 +1,27 @@
+Class of lmer:
+[1] "lmerModLmerTest"
+attr(,"package")
+[1] "lmerTest"
+  effect        term  estimate std.error statistic        df      p.value
+1  fixed (Intercept) 31.524794 2.8336131  11.12530  8.907096 1.595359e-06
+2  fixed          wt -3.517543 0.7205244  -4.88192 29.617961 3.350513e-05
+   conf.low conf.high
+1 25.104509 37.945078
+2 -4.989846 -2.045239
+
+================
+Class of car::Anova:
+[1] "anova"      "data.frame"
+Anova Table (Type II tests)
+
+Response: mpg
+           Sum Sq Df F value   Pr(>F)    
+wt        252.627  1  37.561 1.12e-06 ***
+hp         83.274  1  12.381 0.001451 ** 
+Residuals 195.048 29                     
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+       term     sumsq df statistic      p.value
+1        wt 252.62656  1  37.56091 1.119647e-06
+2        hp  83.27418  1  12.38133 1.451229e-03
+3 Residuals 195.04775 29        NA           NA

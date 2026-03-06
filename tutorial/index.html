@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatSync — Publication-Ready Stats in Word</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-deep: #0a0c10;
+            --bg-card: rgba(22, 27, 34, 0.7);
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #3b82f6;
+            --accent-glow: rgba(139, 92, 246, 0.3);
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --code-bg: #1e1e2e;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            position: relative;
+            padding: 8rem 0 4rem;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid var(--accent-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 2rem;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 30%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .hero-img {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 20px var(--accent-glow);
+            margin-top: 2rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* --- NAVIGATION --- */
+        .nav-dots {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: var(--accent-primary);
+            transform: scale(1.5);
+            box-shadow: 0 0 10px var(--accent-primary);
+        }
+
+        /* --- SECTIONS --- */
+        section {
+            padding: 6rem 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-header {
+            margin-bottom: 4rem;
+            text-align: center;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+        }
+
+        /* --- CARDS & GRID --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 24px;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+        }
+
+        .card i {
+            color: var(--accent-primary);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* --- CODE BLOCKS --- */
+        pre {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #cdd6f4;
+        }
+
+        .r-keyword {
+            color: #c678dd;
+        }
+
+        .r-func {
+            color: #61afef;
+        }
+
+        .r-str {
+            color: #98c379;
+        }
+
+        .r-comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        /* --- STEPS --- */
+        .step-item {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 4rem;
+            align-items: center;
+        }
+
+        .step-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-visual {
+            flex: 1;
+            background: linear-gradient(45deg, var(--bg-card), rgba(139, 92, 246, 0.1));
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .step-visual img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-number {
+            font-size: 4rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.05);
+            margin-bottom: -1.5rem;
+        }
+
+        /* --- CTA --- */
+        .cta {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            padding: 4rem;
+            border-radius: 32px;
+            text-align: center;
+            color: #fff;
+            margin-top: 4rem;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #fff;
+            color: var(--accent-primary);
+            padding: 1rem 2.5rem;
+            border-radius: 999px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            padding: 4rem 0;
+            text-align: center;
+            color: var(--text-muted);
+            border-top: 1px solid var(--glass-border);
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step-item,
+            .step-item:nth-child(even) {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="nav-dots">
+        <div class="dot active" onclick="scrollToSection('hero')"></div>
+        <div class="dot" onclick="scrollToSection('r-package')"></div>
+        <div class="dot" onclick="scrollToSection('word-addin')"></div>
+        <div class="dot" onclick="scrollToSection('sync')"></div>
+    </div>
+
+    <header class="hero" id="hero">
+        <div class="container">
+            <div class="hero-badge">
+                <i data-lucide="sparkles" size="16"></i>
+                StatSync 1.0 is here
+            </div>
+            <h1>Sync Your Analysis<br>to Publication.</h1>
+            <p>The bridge between R statistical power and Microsoft Word precision. No more copy-pasting p-values or
+                wrestling with table formatting.</p>
+            <img src="./assets/hero.png" alt="StatSync Concept" class="hero-img">
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- R PACKAGE SECTION -->
+        <section id="r-package">
+            <div class="section-header">
+                <h2>Step 1: The R Package</h2>
+                <p>Prepare your models for seamless export.</p>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <i data-lucide="package" size="32"></i>
+                    <h3>Capture Everything</h3>
+                    <p>Use <code>sync_stats()</code> to extract coefficients, confidence intervals, and p-values in one
+                        go.</p>
+                    <pre><code><span class="r-comment"># In R Console</span>
+model <- <span class="r-func">lm</span>(mpg ~ wt, <span class="r-func">data</span> = mtcars)
+<span class="r-func">sync_stats</span>(model, <span class="r-str">"Linear Model"</span>)</code></pre>
+                </div>
+
+                <div class="card">
+                    <i data-lucide="table" size="32"></i>
+                    <h3>APA-Ready Tables</h3>
+                    <p>Format entire regression tables with a single command. Ready for publication standards.</p>
+                    <pre><code><span class="r-func">sync_regression_table</span>(
+  <span class="r-str">"Full Model"</span> = model1,
+  <span class="r-str">"Base Model"</span> = model0
+)</code></pre>
+                </div>
+
+                <div class="card">
+                    <i data-lucide="download" size="32"></i>
+                    <h3>Export & Ship</h3>
+                    <p>Save your results to a <code>.statsync</code> file that Word can read directly.</p>
+                    <pre><code><span class="r-func">sync_export</span>(
+  model1, model2, 
+  <span class="r-str">file</span> = <span class="r-str">"results.json"</span>
+)</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- WORD ADD-IN SECTION -->
+        <section id="word-addin">
+            <div class="section-header">
+                <h2>Step 2: The Word Add-in</h2>
+                <p>One-click insertion of your high-precision data.</p>
+            </div>
+
+            <div class="step-item">
+                <div class="step-content">
+                    <div class="step-number">01</div>
+                    <h3>Open the Sidebar</h3>
+                    <p>Launch the StatSync taskpane in Microsoft Word. Your R results are automatically grouped by model
+                        name, making them easy to browse.</p>
+                    <ul style="margin-top: 1rem; color: var(--text-muted); padding-left: 1.2rem;">
+                        <li>Search by coefficient name</li>
+                        <li>Filter by statistical test type</li>
+                        <li>Toggle confidence intervals</li>
+                    </ul>
+                </div>
+                <div class="step-visual">
+                    <img src="./assets/sidebar.png" alt="Word Sidebar Mockup">
+                </div>
+            </div>
+
+            <div class="step-item">
+                <div class="step-content">
+                    <div class="step-number">02</div>
+                    <h3>Choose Your Format</h3>
+                    <p>Select multiple fields for a single coefficient. Insert just the p-value, or a full APA-style
+                        report: <em>"β = .45 [0.32, 0.58], p < .001"</em>.</p>
+                </div>
+                <div class="step-visual">
+                    <div style="text-align: center;">
+                        <div
+                            style="background: #2a2a3a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--accent-primary);">
+                            Inserted: <span style="color: var(--accent-primary); font-weight: bold;">β = 2.45, p <
+                                    .01</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Dynamic Markup Insertion</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SYNC SECTION -->
+        <section id="sync">
+            <div class="section-header">
+                <h2>Real-Time Sync</h2>
+                <p>Data changed in R? No problem.</p>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="display: flex; gap: 2rem; align-items: center;">
+                    <div style="flex: 1;">
+                        <h3>The Live Connection</h3>
+                        <p>Run <code>sync_serve()</code> in R to start a local server. The Word add-in connects
+                            instantly, providing real-time updates as you refine your analysis.</p>
+                        <pre><code><span class="r-func">sync_serve</span>(project_name = <span class="r-str">"Thesis"</span>)
+<span class="r-comment"># After re-running models:</span>
+<span class="r-func">sync_update</span>()</code></pre>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <i data-lucide="refresh-cw" size="64"
+                            style="margin: 0 auto; animation: rotate 4s linear infinite;"></i>
+                        <p style="margin-top: 1rem; color: var(--accent-primary); font-weight: bold;">BIDIRECTIONAL FLOW
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="cta">
+            <h2>Ready to transform your workflow?</h2>
+            <p>Start using StatSync today and never manually type a standard error again.</p>
+            <a href="#" class="btn">Get Started Now</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 StatSync Development Team. Built for researchers, by researchers.</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+
+                    // Update dots
+                    const id = entry.target.id;
+                    document.querySelectorAll('.dot').forEach(dot => {
+                        dot.classList.remove('active');
+                        if (dot.getAttribute('onclick').includes(id)) {
+                            dot.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section, header').forEach(section => {
+            observer.observe(section);
+        });
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Add some "rotate" animation to the sync icon
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+
+</html>

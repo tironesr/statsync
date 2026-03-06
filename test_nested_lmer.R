@@ -1,0 +1,8 @@
+library(lmerTest)
+m1 <- lmer(mpg ~ wt + (1|cyl), data=mtcars)
+m2 <- lmer(mpg ~ wt + hp + (1|cyl), data=mtcars)
+a1 <- anova(m1, m2)
+cat("Nested lmer anova:\n")
+print(a1)
+cat("\nTidy:\n")
+print(broom::tidy(a1))

@@ -1,0 +1,30 @@
+{
+  "name": "statsync-word-addin",
+  "version": "1.0.0",
+  "description": "StatSync - R Statistics to Word Add-in",
+  "scripts": {
+    "dev": "webpack serve --mode development --open",
+    "build": "webpack --mode production",
+    "start": "office-addin-debugging start manifest.xml",
+    "stop": "office-addin-debugging stop manifest.xml",
+    "validate": "office-addin-manifest validate manifest.xml",
+    "sideload": "office-addin-dev-certs install && office-addin-debugging start manifest.xml"
+  },
+  "dependencies": {
+    "@types/office-js": "^1.0.360"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^14.0.0",
+    "css-loader": "^6.8.0",
+    "html-webpack-plugin": "^5.6.0",
+    "office-addin-debugging": "^6.0.6",
+    "office-addin-dev-certs": "^1.11.0",
+    "office-addin-manifest": "^1.12.0",
+    "style-loader": "^3.3.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.3.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.2.3"
+  }
+}

@@ -6,12 +6,12 @@
   xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
   xsi:type="TaskPaneApp">
   
-  <Id>2d46e2da-2dfa-48a0-bbbc-e59e9bf9b597</Id>
-  <Version>1.0.0.0</Version>
+  <Id>3b8d1b11-477d-4191-8457-375ad28bf280</Id>
+  <Version>1.0.0.1</Version>
   <ProviderName>StatSync</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="StatSync" />
-  <Description DefaultValue="Insert formatted statistics from R directly into Word" />
+  <DisplayName DefaultValue="StatSync Desktop" />
+  <Description DefaultValue="Insert formatted statistics directly into Word" />
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
   <SupportUrl DefaultValue="https://localhost:3000/taskpane.html" />
 
@@ -33,17 +33,22 @@
             <CustomTab id="StatSyncTab">
               <Group id="StatSyncGroup">
                 <Label resid="GroupLabel" />
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16" />
+                  <bt:Image size="32" resid="Icon.32x32" />
+                  <bt:Image size="80" resid="Icon.80x80" />
+                </Icon>
                 <Control xsi:type="Button" id="TaskpaneButton">
                   <Label resid="TaskpaneButton.Label" />
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label" />
+                    <Description resid="TaskpaneButton.Tooltip" />
+                  </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16" />
                     <bt:Image size="32" resid="Icon.32x32" />
                     <bt:Image size="80" resid="Icon.80x80" />
                   </Icon>
-                  <Supertip>
-                    <Title resid="TaskpaneButton.Label" />
-                    <Description resid="TaskpaneButton.Tooltip" />
-                  </Supertip>
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>StatSyncPane</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url" />

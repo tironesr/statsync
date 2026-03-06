@@ -6,11 +6,11 @@
   xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
   xsi:type="TaskPaneApp">
   
-  <Id>2d46e2da-2dfa-48a0-bbbc-e59e9bf9b597</Id>
+  <Id>5e8e52c1-9a1b-4d8e-9c2b-6f7a8b9c0d1e</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>StatSync</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="StatSync (Production)" />
+  <DisplayName DefaultValue="StatSync Pro" />
   <Description DefaultValue="Insert formatted statistics from R directly into Word" />
   <IconUrl DefaultValue="https://tironesr.github.io/statsync/assets/icon-32.png" />
   <SupportUrl DefaultValue="https://tironesr.github.io/statsync/taskpane.html" />
@@ -30,22 +30,27 @@
       <Host xsi:type="Document">
         <DesktopFormFactor>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
-            <CustomTab id="StatSyncTab">
-              <Group id="StatSyncGroup">
+            <CustomTab id="StatSyncTabRel">
+              <Group id="StatSyncGroupRel">
                 <Label resid="GroupLabel" />
-                <Control xsi:type="Button" id="TaskpaneButton">
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16" />
+                  <bt:Image size="32" resid="Icon.32x32" />
+                  <bt:Image size="80" resid="Icon.80x80" />
+                </Icon>
+                <Control xsi:type="Button" id="TaskpaneButtonRel">
                   <Label resid="TaskpaneButton.Label" />
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label" />
+                    <Description resid="TaskpaneButton.Tooltip" />
+                  </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16" />
                     <bt:Image size="32" resid="Icon.32x32" />
                     <bt:Image size="80" resid="Icon.80x80" />
                   </Icon>
-                  <Supertip>
-                    <Title resid="TaskpaneButton.Label" />
-                    <Description resid="TaskpaneButton.Tooltip" />
-                  </Supertip>
                   <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>StatSyncPane</TaskpaneId>
+                    <TaskpaneId>StatSyncPaneRel</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>

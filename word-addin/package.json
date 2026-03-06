@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "StatSync - R Statistics to Word Add-in",
   "scripts": {
-    "dev": "webpack serve --mode development --open",
+    "dev-server": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "start": "office-addin-debugging start manifest.xml",
+    "start:desktop": "office-addin-debugging start manifest.xml desktop",
+    "start:web": "office-addin-debugging start manifest.xml web",
     "stop": "office-addin-debugging stop manifest.xml",
     "validate": "office-addin-manifest validate manifest.xml",
     "sideload": "office-addin-dev-certs install && office-addin-debugging start manifest.xml"

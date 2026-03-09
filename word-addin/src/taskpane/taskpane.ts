@@ -29,6 +29,10 @@ let activeTypeFilter: string | null = null;
 let isAutoSyncPaused: boolean = false;
 let isConnected: boolean = false;
 
+// Autocomplete State
+let dialog: Office.Dialog | null = null;
+let currentReplaceText = "";
+
 Office.onReady((info) => {
   if (info.host === Office.HostType.Word) {
     initialize();
@@ -51,72 +55,53 @@ function initialize(): void {
   setupAutocomplete();
 
   reader.onUpdate(async (data, isLive) => {
-    // 1. Update the isConnected state to match the reader's live status
+    // 1. Update internal connection state
     isConnected = isLive;
 
-    // 2. Feed statistics to autocomplete monitor ALWAYS, even if offline/paused
+    // 2. ALWAYS feed stats to monitor for {{ autocomplete, even if paused or offline
     const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
     autocompleteMonitor.setStatistics(statsArray);
     autocompleteMonitor.start();
 
-    // 3. Handle Auto-Sync and Paused states
-    if (isAutoSyncPaused) {
-      // If paused, we DO NOT update the UI or Document, but we show "Paused" status
-      updateStatus(data, true);
+    // 3. Status Bar: Update state (Live, Offline, or Paused)
+    updateStatus(data, !isConnected || isAutoSyncPaused);
 
-      // Show manual sync button while paused
-      const btnManualSync = document.getElementById("btn-manual-sync");
-      if (btnManualSync) btnManualSync.style.display = "block";
-
-      const btnLive = document.getElementById("btn-connect-server");
-      if (btnLive) {
-        if (isConnected) {
-          btnLive.innerHTML = '<span class="live-dot"></span> Live (Paused)';
-          btnLive.className = "btn btn-success paused";
-        } else {
-          btnLive.innerHTML = '<span class="live-dot"></span> Offline (Paused)';
-          btnLive.className = "btn btn-live";
-        }
+    // 4. Update the "Live/Offline" button visibility and style
+    const btnLive = document.getElementById("btn-connect-server");
+    if (btnLive) {
+      if (isConnected) {
+        btnLive.innerHTML = isAutoSyncPaused ? '<span class="live-dot"></span> Live (Paused)' : '<span class="live-dot"></span> Live';
+        btnLive.className = isAutoSyncPaused ? "btn btn-success paused" : "btn btn-success";
+      } else {
+        btnLive.innerHTML = '<span class="live-dot"></span> Offline';
+        btnLive.className = "btn btn-live";
       }
+    }
+
+    // 5. Manage Manual Sync Button
+    const btnManualSync = document.getElementById("btn-manual-sync") as HTMLElement;
+    if (btnManualSync) {
+      btnManualSync.style.display = (isAutoSyncPaused || !isConnected) ? "block" : "none";
+    }
+
+    // 6. MAIN SYNC LOGIC: Only proceed if NOT paused
+    if (isAutoSyncPaused) {
+      // While paused, do not update cards or document.
       return;
     }
 
+    // Update the sidebar cards with any new data
+    renderAll(data);
+
+    // If live AND not paused, we automatically push updates into the Word document
     if (isConnected) {
-      // Live Mode: Update everything
-      renderAll(data);
-      updateStatus(data, false);
-
-      // Hide manual sync button
-      const btnManualSync = document.getElementById("btn-manual-sync");
-      if (btnManualSync) btnManualSync.style.display = "none";
-
-      const btnLive = document.getElementById("btn-connect-server");
-      if (btnLive) {
-        btnLive.innerHTML = '<span class="live-dot"></span> Live';
-        btnLive.className = "btn btn-success";
-      }
-
       try {
         const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
         if (res.updated > 0 || res.failed > 0) {
           showUpdateResult(res);
         }
       } catch (e) {
-        console.error("Auto sync error", e);
-      }
-    } else {
-      // Offline Mode: Update UI with cached data, but don't auto-sync document
-      renderAll(data);
-      updateStatus(data, true);
-
-      // Show manual sync button
-      const btnManualSync = document.getElementById("btn-manual-sync");
-      if (btnManualSync) btnManualSync.style.display = "block";
-
-      const btnLive = document.getElementById("btn-connect-server");
-      if (btnLive) {
-        btnLive.innerHTML = '<span class="live-dot"></span> Offline';
-        btnLive.className = "btn btn-live";
+        console.error("Auto sync update failed:", e);
       }
     }
   });
@@ -254,14 +239,21 @@ function setupEventHandlers(): void {
       btnPauseSync.textContent = "▶ Resume Automatic Syncing";
       btnPauseSync.classList.remove("btn-outline");
       btnPauseSync.classList.add("btn-primary");
-      btnManualSync.style.display = "block"; // Show manual sync button
-      setStatus("Auto-sync paused", "warning");
+      setStatus("Automatic syncing paused", "warning");
     } else {
       btnPauseSync.textContent = "⏸ Pause Automatic Syncing";
       btnPauseSync.classList.remove("btn-primary");
       btnPauseSync.classList.add("btn-outline");
-      btnManualSync.style.display = "none"; // Hide manual sync button
-      setStatus("Connected to R (live)", "success");
+      setStatus("Resuming automatic sync", "success");
+    }
+
+    // Refresh UI immediately to reflect the new pause state
+    const data = reader.getData();
+    if (data) {
+      renderAll(data);
+      updateStatus(data, !isConnected || isAutoSyncPaused);
+
+      if (btnManualSync) btnManualSync.style.display = (isAutoSyncPaused || !isConnected) ? "block" : "none";
     }
   };
 
@@ -303,9 +295,6 @@ function setupEventHandlers(): void {
 // AUTOCOMPLETE
 // ============================================================
 
-let dialog: Office.Dialog | null = null;
-let currentReplaceText = "";
-
 function setupAutocomplete(): void {
   autocompleteMonitor.onSuggestions((suggestions, triggerText) => {
     if (triggerText && !dialog) {
@@ -319,7 +308,6 @@ function openAutocompleteDialog(triggerText: string): void {
   autocompleteMonitor.stop(); // pause polling while dialog is open
 
   // Share statistics data with the dialog via localStorage
-  // The dialog will read this on init
   const allStats = reader.getData()?.statistics || [];
   localStorage.setItem("statsync_dialog_data", JSON.stringify(allStats));
 
@@ -385,9 +373,6 @@ async function handleDialogMessage(arg: any): Promise<void> {
     if (stat) {
       const statToInsert: StatisticEntry = { ...stat };
 
-      // Read customFormatted from localStorage as a reliable side-channel.
-      // The dialog writes it there before calling messageParent, so it
-      // survives even if the dialog auto-closes and events race.
       const storedCustom = localStorage.getItem("statsync_dialog_custom_formatted");
       if (storedCustom && storedCustom.length > 0) {
         statToInsert.formatted = storedCustom;
@@ -396,7 +381,6 @@ async function handleDialogMessage(arg: any): Promise<void> {
         statToInsert.formatted = data.customFormatted;
       }
 
-      // Read custom fields to save to document settings so updates rebuild the custom format
       const storedFields = localStorage.getItem("statsync_dialog_custom_fields");
       if (storedFields) {
         Office.context.document.settings.set(`statsync_format_${stat.id}`, storedFields);
@@ -432,10 +416,13 @@ async function handleDialogMessage(arg: any): Promise<void> {
 // ============================================================
 
 function showPanels(): void {
-  document.getElementById("search-panel")!.style.display = "block";
-  // Models panel stays hidden until user searches or clicks a filter
-  document.getElementById("models-panel")!.style.display = "none";
-  document.getElementById("update-panel")!.style.display = "block";
+  const searchPanel = document.getElementById("search-panel");
+  const updatePanel = document.getElementById("update-panel");
+  if (searchPanel) searchPanel.style.display = "block";
+  if (updatePanel) updatePanel.style.display = "block";
+
+  const modelsPanel = document.getElementById("models-panel");
+  if (modelsPanel) modelsPanel.style.display = "none";
 }
 
 function renderAll(data: StatSyncProject): void {
@@ -443,11 +430,9 @@ function renderAll(data: StatSyncProject): void {
   renderModelCards(data);
 }
 
-/**
- * Render type filter chips based on what test types exist in the data.
- */
 function renderFilterChips(data: StatSyncProject): void {
-  const container = document.getElementById("filter-chips")!;
+  const container = document.getElementById("filter-chips");
+  if (!container) return;
   container.innerHTML = "";
 
   const types = new Set<string>();
@@ -463,8 +448,8 @@ function renderFilterChips(data: StatSyncProject): void {
   allChip.addEventListener("click", () => {
     activeTypeFilter = activeTypeFilter === null ? "none" : null;
     renderFilterChips(data);
-    // Show models panel when a filter chip is clicked
-    document.getElementById("models-panel")!.style.display = "block";
+    const modelsPanel = document.getElementById("models-panel");
+    if (modelsPanel) modelsPanel.style.display = "block";
     filterModels();
   });
   container.appendChild(allChip);
@@ -477,19 +462,17 @@ function renderFilterChips(data: StatSyncProject): void {
     chip.addEventListener("click", () => {
       activeTypeFilter = activeTypeFilter === type ? "none" : type;
       renderFilterChips(data);
-      // Show models panel when a filter chip is clicked
-      document.getElementById("models-panel")!.style.display = "block";
+      const modelsPanel = document.getElementById("models-panel");
+      if (modelsPanel) modelsPanel.style.display = "block";
       filterModels();
     });
     container.appendChild(chip);
   });
 }
 
-/**
- * Render model cards grouped by model/group name.
- */
 function renderModelCards(data: StatSyncProject): void {
-  const container = document.getElementById("models-list")!;
+  const container = document.getElementById("models-list");
+  if (!container) return;
   container.innerHTML = "";
 
   const groups = reader.getStatisticsByGroup();
@@ -511,29 +494,24 @@ function renderModelCards(data: StatSyncProject): void {
     container.appendChild(card);
   });
 
-  document.getElementById("stat-count")!.textContent = `${totalStats} stats`;
+  const countEl = document.getElementById("stat-count");
+  if (countEl) countEl.textContent = `${totalStats} stats`;
 }
 
-/**
- * Create a single model card with coefficient selector and field checklist.
- */
 function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElement {
   const card = document.createElement("div");
   card.className = "model-card";
   card.dataset.group = groupName.toLowerCase();
   card.dataset.types = [...new Set(stats.map((s) => s.type))].join(",");
 
-  // Determine primary type for icon/config
   const primaryType = stats[0].type;
   const config = getFieldConfig(primaryType);
 
-  // Determine subtitle
   const statTypes = [...new Set(stats.map((s) => s.type))];
   const subtitle = stats.length === 1
     ? config.label
     : `${stats.length} statistics · ${statTypes.map((t) => getFieldConfig(t).label).join(", ")}`;
 
-  // ---- Header ----
   const header = document.createElement("div");
   header.className = "model-card-header";
   header.innerHTML = `
@@ -551,11 +529,9 @@ function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElemen
   });
   card.appendChild(header);
 
-  // ---- Body ----
   const body = document.createElement("div");
   body.className = "model-card-body";
 
-  // Initialize card state if not exists
   if (!cardStates.has(groupName)) {
     const defaultFields = new Set<string>();
     const defaultConfig = getFieldConfig(stats[0].type);
@@ -571,7 +547,6 @@ function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElemen
 
   const state = cardStates.get(groupName)!;
 
-  // ---- Coefficient Selector (if multiple stats in group) ----
   if (stats.length > 1) {
     const selectorDiv = document.createElement("div");
     selectorDiv.className = "coef-selector";
@@ -586,7 +561,6 @@ function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElemen
     stats.forEach((stat) => {
       const option = document.createElement("option");
       option.value = stat.id;
-      // Clean up the label: remove the group prefix
       let displayLabel = stat.label.replace(groupName + " - ", "").replace(groupName + " -", "");
       option.textContent = `${getFieldConfig(stat.type).icon} ${displayLabel}`;
       if (stat.id === state.selectedCoefId) option.selected = true;
@@ -595,18 +569,12 @@ function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElemen
 
     select.addEventListener("change", () => {
       state.selectedCoefId = select.value;
-
-      // Update field config for the new stat type
       const newStat = stats.find((s) => s.id === select.value)!;
       const newConfig = getFieldConfig(newStat.type);
-
-      // Reset to APA defaults for new type
       state.checkedFields = new Set<string>();
       newConfig.fields.forEach((f) => {
         if (f.apaDefault) state.checkedFields.add(f.key);
       });
-
-      // Re-render the body contents
       renderCardBody(body, groupName, stats, state);
     });
 
@@ -620,23 +588,17 @@ function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElemen
   return card;
 }
 
-/**
- * Render the preview inside a card body.
- */
 function renderCardBody(
   body: HTMLElement,
   groupName: string,
   stats: StatisticEntry[],
   state: CardState
 ): void {
-  // Remove existing preview (keep the selector dropdown)
   const existingPreview = body.querySelector(".preview-box");
   if (existingPreview) existingPreview.remove();
 
   const selectedStat = stats.find((s) => s.id === state.selectedCoefId) || stats[0];
-  const typeConfig = getFieldConfig(selectedStat.type);
 
-  // ---- Preview ----
   const previewBox = document.createElement("div");
   previewBox.className = "preview-box";
   previewBox.innerHTML = `
@@ -645,18 +607,14 @@ function renderCardBody(
   `;
   body.appendChild(previewBox);
 
-  // Show the formatted output for the selected stat
   const previewText = previewBox.querySelector(".preview-text")!;
   previewText.innerHTML = markupToHtml(selectedStat.formatted);
 }
 
-
-
-/**
- * Filter model cards by search text and type filter.
- */
 function filterModels(): void {
-  const query = (document.getElementById("search-input") as HTMLInputElement).value.toLowerCase();
+  const searchInput = document.getElementById("search-input") as HTMLInputElement;
+  if (!searchInput) return;
+  const query = searchInput.value.toLowerCase();
   const cards = document.querySelectorAll(".model-card") as NodeListOf<HTMLElement>;
 
   let visibleCount = 0;
@@ -664,16 +622,13 @@ function filterModels(): void {
   cards.forEach((card) => {
     const group = card.dataset.group || "";
     const types = card.dataset.types || "";
-
     const matchesSearch = query === "" || group.includes(query);
     const matchesType = activeTypeFilter === null || types.includes(activeTypeFilter);
-
     const visible = matchesSearch && matchesType && activeTypeFilter !== "none";
     card.style.display = visible ? "block" : "none";
     if (visible) visibleCount++;
   });
 
-  // Update count
   const countEl = document.getElementById("stat-count");
   if (countEl) {
     const total = cards.length;
@@ -683,37 +638,40 @@ function filterModels(): void {
   }
 }
 
-// Tables disabled by user request
-
 // ============================================================
 // HELPERS
 // ============================================================
 
 function setStatus(message: string, type: string = "info"): void {
-  document.getElementById("status")!.textContent = message;
+  const statusEl = document.getElementById("status");
+  if (statusEl) statusEl.textContent = message;
 }
 
 function updateStatus(data: StatSyncProject, isOfflineOrPaused: boolean = false): void {
   const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
-
   const statusMsg = !isConnected
     ? `🔴 Offline (${statsArray.length} cached)`
     : (isAutoSyncPaused ? `⏸ Paused (${statsArray.length} stats)` : `${statsArray.length} statistics`);
 
   setStatus(statusMsg);
 
-  const projectNameEl = document.getElementById("project-name")!;
-  projectNameEl.textContent = data.project?.name || "—";
-  if (!isConnected) projectNameEl.innerHTML += " <small>(Offline)</small>";
+  const projectNameEl = document.getElementById("project-name");
+  if (projectNameEl) {
+    projectNameEl.textContent = data.project?.name || "—";
+    if (!isConnected) projectNameEl.innerHTML += " <small>(Offline)</small>";
+  }
 
-  document.getElementById("last-sync")!.textContent = !isConnected ? "Last Sync: " + new Date(data.generated_at || Date.now()).toLocaleTimeString() : new Date().toLocaleTimeString();
+  const lastSyncEl = document.getElementById("last-sync");
+  if (lastSyncEl) {
+    lastSyncEl.textContent = !isConnected
+      ? "Last Sync: " + new Date(data.generated_at || Date.now()).toLocaleTimeString()
+      : new Date().toLocaleTimeString();
+  }
 }
 
-function showUpdateResult(
-  result: { updated: number; failed: number; unchanged: number } | null,
-  error?: string
-): void {
-  const div = document.getElementById("update-result")!;
+function showUpdateResult(result: { updated: number; failed: number; unchanged: number } | null, error?: string): void {
+  const div = document.getElementById("update-result");
+  if (!div) return;
   div.style.display = "block";
 
   if (error) {
@@ -721,8 +679,7 @@ function showUpdateResult(
     div.textContent = error;
   } else if (result) {
     div.className = "update-result success";
-    div.innerHTML = `✅ ${result.updated} updated · ⏸ ${result.unchanged} unchanged${result.failed > 0 ? ` · ❌ ${result.failed} failed` : ""
-      }`;
+    div.innerHTML = `✅ ${result.updated} updated · ⏸ ${result.unchanged} unchanged${result.failed > 0 ? ` · ❌ ${result.failed} failed` : ""}`;
   }
 
   setTimeout(() => {
@@ -739,31 +696,8 @@ function markupToHtml(text: string): string {
     .replace(/\{\/b\}/g, "</strong>");
 }
 
-function stripMarkup(text: string): string {
-  return text.replace(/\{\/?(i|b)\}/g, "");
-}
-
 function escapeHtml(text: string): string {
   const div = document.createElement("div");
   div.textContent = text;
-  // Get the escaped text but preserve our markup tags
-  let escaped = div.innerHTML;
-  // The {i} tags got escaped too, restore them
-  escaped = escaped.replace(/\{i\}/g, "{i}").replace(/\{\/i\}/g, "{/i}");
-  escaped = escaped.replace(/\{b\}/g, "{b}").replace(/\{\/b\}/g, "{/b}");
-  return escaped;
-}
-
-function flashButton(btn: HTMLElement, text: string, isError: boolean): void {
-  const original = btn.textContent;
-  btn.textContent = text;
-  btn.style.background = isError ? "var(--error)" : "var(--accent)";
-  btn.style.color = "white";
-  btn.style.borderColor = isError ? "var(--error)" : "var(--accent)";
-  setTimeout(() => {
-    btn.textContent = original;
-    btn.style.background = "";
-    btn.style.color = "";
-    btn.style.borderColor = "";
-  }, 1500);
+  return div.innerHTML;
 }

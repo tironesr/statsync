@@ -43,17 +43,21 @@ function initialize(): void {
   setupEventHandlers();
   setupAutocomplete();
 
-  reader.onUpdate(async (data) => {
-    renderAll(data);
-    updateStatus(data);
+  reader.onUpdate(async (data, isLive) => {
+    // 1. Update the isConnected state to match the reader's live status
+    isConnected = isLive;
 
-    // Feed statistics to autocomplete monitor
-    const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
-    autocompleteMonitor.setStatistics(statsArray);
-    autocompleteMonitor.start();
-
-    // Auto-sync doc entries when server data actually changes
+    // 2. Only update UI and Document automatically if not paused AND we are currently live
+    // (If not live, we treat as paused/offline mode)
     if (!isAutoSyncPaused && isConnected) {
+      renderAll(data);
+      updateStatus(data, false);
+
+      // Feed statistics to autocomplete monitor
+      const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
+      autocompleteMonitor.setStatistics(statsArray);
+      autocompleteMonitor.start();
+
       try {
         const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
         if (res.updated > 0 || res.failed > 0) {
@@ -62,8 +66,37 @@ function initialize(): void {
       } catch (e) {
         console.error("Auto sync error", e);
       }
+    } else {
+      // If paused OR disconnected, just update the UI state to show current data as cached
+      renderAll(data);
+      updateStatus(data, !isConnected || isAutoSyncPaused);
+
+      // Show/Hide manual sync button based on isLive & isAutoSyncPaused
+      const btnManualSync = document.getElementById("btn-manual-sync");
+      if (btnManualSync) {
+        btnManualSync.style.display = (!isConnected || isAutoSyncPaused) ? "block" : "none";
+      }
+
+      const btnLive = document.getElementById("btn-connect-server");
+      if (btnLive) {
+        if (isConnected) {
+          btnLive.innerHTML = '<span class="live-dot"></span> Live';
+          btnLive.className = "btn btn-success";
+        } else {
+          btnLive.innerHTML = '<span class="live-dot"></span> Offline';
+          btnLive.className = "btn btn-live";
+        }
+      }
     }
   });
+
+  // Load from cache initially for offline support
+  const initialData = reader.getData();
+  if (initialData) {
+    renderAll(initialData);
+    updateStatus(initialData, true); // true = show offline/cached state
+    showPanels();
+  }
 }
 
 // ============================================================
@@ -175,19 +208,57 @@ function setupEventHandlers(): void {
 
   // Pause Auto Sync
   const btnPauseSync = document.getElementById("btn-pause-sync") as HTMLButtonElement;
+  const btnManualSync = document.getElementById("btn-manual-sync") as HTMLButtonElement;
+
   btnPauseSync.onclick = (e) => {
     e.preventDefault();
     isAutoSyncPaused = !isAutoSyncPaused;
+
     if (isAutoSyncPaused) {
       btnPauseSync.textContent = "▶ Resume Automatic Syncing";
       btnPauseSync.classList.remove("btn-outline");
       btnPauseSync.classList.add("btn-primary");
+      btnManualSync.style.display = "block"; // Show manual sync button
       setStatus("Auto-sync paused", "warning");
     } else {
       btnPauseSync.textContent = "⏸ Pause Automatic Syncing";
       btnPauseSync.classList.remove("btn-primary");
       btnPauseSync.classList.add("btn-outline");
+      btnManualSync.style.display = "none"; // Hide manual sync button
       setStatus("Connected to R (live)", "success");
+    }
+  };
+
+  btnManualSync.onclick = async (e) => {
+    e.preventDefault();
+    btnManualSync.disabled = true;
+    const originalText = btnManualSync.innerHTML;
+    btnManualSync.innerHTML = '🔄 Syncing...';
+
+    try {
+      // 1. Fetch latest directly to ensure we're fresh before syncing
+      if (isConnected) {
+        await reader.refresh();
+      }
+
+      const data = reader.getData();
+
+      // 2. Update the sidebar UI immediately
+      if (data) {
+        renderAll(data);
+        updateStatus(data);
+      }
+
+      // 3. Update the Word document
+      const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+      showUpdateResult(res);
+      setStatus(`✓ Manual sync complete: ${res.updated} updated`, "success");
+    } catch (err) {
+      console.error("Manual sync failed", err);
+      setStatus(`Manual sync failed: ${err}`, "error");
+    } finally {
+      btnManualSync.innerHTML = originalText;
+      btnManualSync.disabled = false;
     }
   };
 }
@@ -589,12 +660,20 @@ function setStatus(message: string, type: string = "info"): void {
   document.getElementById("status")!.textContent = message;
 }
 
-function updateStatus(data: StatSyncProject): void {
+function updateStatus(data: StatSyncProject, isOfflineOrPaused: boolean = false): void {
   const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
-  setStatus(`${statsArray.length} statistics`);
 
-  document.getElementById("project-name")!.textContent = data.project?.name || "—";
-  document.getElementById("last-sync")!.textContent = new Date().toLocaleTimeString();
+  const statusMsg = !isConnected
+    ? `🔴 Offline (${statsArray.length} cached)`
+    : (isAutoSyncPaused ? `⏸ Paused (${statsArray.length} stats)` : `${statsArray.length} statistics`);
+
+  setStatus(statusMsg);
+
+  const projectNameEl = document.getElementById("project-name")!;
+  projectNameEl.textContent = data.project?.name || "—";
+  if (!isConnected) projectNameEl.innerHTML += " <small>(Offline)</small>";
+
+  document.getElementById("last-sync")!.textContent = !isConnected ? "Last Sync: " + new Date(data.generated_at || Date.now()).toLocaleTimeString() : new Date().toLocaleTimeString();
 }
 
 function showUpdateResult(

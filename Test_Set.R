@@ -21,9 +21,8 @@ library(statsync)
 library(lmerTest)
 library(car)
 
-cat("Starting StatSync server...\n")
 # Start the server. The Word Add-in can now connect to this instance.
-sync_serve(project_name = "StatSync Full Test Suite")
+sync_serve(project_name = "StatSync Test w/ Cat")
 
 # Pause briefly to ensure server starts up
 Sys.sleep(1)
@@ -34,14 +33,14 @@ cat("\nGenerating and syncing models to the add-in...\n")
 # 1. Descriptive Statistics
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Descriptive Statistics\n")
-sync_update(iris, label = "Descriptives: Iris Dataset")
+sync_update(iris)
 
-# ------------------------------------------------------------------------------
+stop# ------------------------------------------------------------------------------
 # 2. Linear Models (OLS Regression)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Linear Model\n")
-lm_mod <- lm(mpg ~ wt + cyl + disp, data = mtcars)
-sync_update(lm_mod, label = "Linear Model: MPG Predictors")
+lm_mod <- lm(mpg ~ wt, data = mtcars)
+sync_update(lm_mod)
 
 # ------------------------------------------------------------------------------
 # 3. Nested Model Comparisons (Linear Models / F-test)
@@ -55,23 +54,25 @@ sync_update(nested_lm_comp, label = "Nested Model Comp: LM (F-Test)")
 # 4. Generalized Linear Models (Logistic Regression / Odds Ratios)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Logistic Regression\n")
-glm_mod <- glm(vs ~ wt, data = mtcars, family = "binomial")
-sync_update(glm_mod, label = "Logistic Regression: Engine Type")
+glm_mod <- glm(vs ~ wt + hp, data = mtcars, family = "binomial")
+sync_update(glm_mod)
 
 # ------------------------------------------------------------------------------
 # 5. Nested Model Comparisons (GLM / Chi-Square)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Nested GLM Comparison (Chi-Square)\n")
-glm_mod_reduced <- glm(vs ~ wt, data = mtcars, family = "binomial")
+glm_mod_reduced <- glm(vs ~ gp, data = mtcars, family = "binomial")
 nested_glm_comp <- anova(glm_mod_reduced, glm_mod, test = "Chisq")
-sync_update(nested_glm_comp, label = "Nested Model Comp: GLM (Chi-Sq)")
+
+
+sync_update(glm_mod,glm_mod_reduced)
 
 # ------------------------------------------------------------------------------
 # 6. Mixed-Effects Models (lmerTest)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Mixed-Effects Model\n")
 lmer_mod <- lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
-sync_update(lmer_mod, label = "Mixed Model: Sleep Study")
+sync_update(lmer_mod)
 
 # ------------------------------------------------------------------------------
 # 7. Analysis of Variance (Generic ANOVA)
@@ -127,3 +128,8 @@ cat("You can now open the StatSync Word Add-in and refresh to verify the outputs
 cat("Remember to leave this R session running while you test in Word.\n")
 cat("Run `sync_stop()` when you are finished testing to shut down the server.\n")
 cat("==============================================================================\n")
+
+
+#Add manual sync button when autosync is turned off
+#StatSync should check for updates on models already inserted into the text when a live connection is established (e.g., you close Word, make updates to your code push your updates, re-open word... you want those updates to be reflected)
+#There needs to be an offline mode

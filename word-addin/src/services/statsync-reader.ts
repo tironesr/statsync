@@ -14,7 +14,30 @@ export class StatSyncReader {
   private sourceType: DataSourceType = DataSourceType.FILE;
   private serverUrl: string = "http://localhost:8877";
   private pollInterval: number | null = null;
-  private onUpdateCallbacks: Array<(data: StatSyncProject) => void> = [];
+  private onUpdateCallbacks: Array<(data: StatSyncProject, isLive: boolean) => void> = [];
+  private isLive: boolean = false;
+
+  constructor() {
+    this.loadFromCache();
+  }
+
+  // --- Persistence for Offline Mode ---
+  private loadFromCache(): void {
+    const cached = localStorage.getItem("statsync_cached_project");
+    if (cached) {
+      try {
+        this.data = JSON.parse(cached) as StatSyncProject;
+      } catch (e) {
+        console.error("Failed to load StatSync cache", e);
+      }
+    }
+  }
+
+  private saveToCache(): void {
+    if (this.data) {
+      localStorage.setItem("statsync_cached_project", JSON.stringify(this.data));
+    }
+  }
 
   // --- Load from file (user picks a .statsync.json) ---
   async loadFromFile(file: File): Promise<StatSyncProject> {
@@ -60,35 +83,47 @@ export class StatSyncReader {
       if (!status.active) throw new Error("Server not active");
 
       // Initial load
-      await this.fetchFromServer();
+      await this.refresh();
       this.sourceType = DataSourceType.SERVER;
+      this.isLive = true;
 
       return true;
     } catch (err) {
       console.error("Failed to connect to StatSync server:", err);
+      this.isLive = false;
       return false;
     }
   }
 
-  private async fetchFromServer(): Promise<void> {
-    const response = await fetch(`${this.serverUrl}/stats`);
-    if (!response.ok) throw new Error("Failed to fetch stats");
+  public async refresh(): Promise<void> {
+    try {
+      const response = await fetch(`${this.serverUrl}/stats`);
+      if (!response.ok) throw new Error("Failed to fetch stats");
 
-    const newData = (await response.json()) as StatSyncProject;
-    if (newData) {
-      if (!Array.isArray(newData.statistics)) newData.statistics = [];
-      if (!Array.isArray(newData.tables)) newData.tables = [];
-    }
+      const newData = (await response.json()) as StatSyncProject;
+      if (newData) {
+        if (!Array.isArray(newData.statistics)) newData.statistics = [];
+        if (!Array.isArray(newData.tables)) newData.tables = [];
+      }
 
-    // Check if data actually changed
-    const newHash = JSON.stringify(newData.generated_at);
-    const oldHash = this.data
-      ? JSON.stringify(this.data.generated_at)
-      : null;
+      this.isLive = true;
 
-    if (newHash !== oldHash) {
-      this.data = newData;
-      this.notifyUpdate();
+      // Check if data actually changed
+      const newHash = JSON.stringify(newData.generated_at);
+      const oldHash = this.data
+        ? JSON.stringify(this.data.generated_at)
+        : null;
+
+      if (newHash !== oldHash) {
+        this.data = newData;
+        this.notifyUpdate();
+      }
+    } catch (err) {
+      if (this.isLive) {
+        this.isLive = false;
+        this.notifyUpdate(); // Notify status change even if data haven't changed
+      }
+      throw err;
     }
   }
 
@@ -97,7 +132,7 @@ export class StatSyncReader {
     this.stopPolling();
     this.pollInterval = window.setInterval(async () => {
       try {
-        await this.fetchFromServer();
+        await this.refresh();
       } catch (err) {
         console.warn("Poll failed:", err);
       }
@@ -152,13 +187,14 @@ export class StatSyncReader {
   }
 
   // --- Callbacks ---
-  onUpdate(callback: (data: StatSyncProject) => void): void {
+  onUpdate(callback: (data: StatSyncProject, isLive: boolean) => void): void {
     this.onUpdateCallbacks.push(callback);
   }
 
   private notifyUpdate(): void {
     if (this.data) {
-      this.onUpdateCallbacks.forEach((cb) => cb(this.data!));
+      this.saveToCache();
+      this.onUpdateCallbacks.forEach((cb) => cb(this.data!, this.isLive));
     }
   }
 

@@ -7,10 +7,10 @@
   xsi:type="TaskPaneApp">
   
   <Id>3b8d1b11-477d-4191-8457-375ad28bf280</Id>
-  <Version>1.0.0.1</Version>
+  <Version>1.0.3.0</Version>
   <ProviderName>StatSync</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="StatSync Desktop" />
+  <DisplayName DefaultValue="StatSync Local" />
   <Description DefaultValue="Insert formatted statistics directly into Word" />
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
   <SupportUrl DefaultValue="https://localhost:3000/taskpane.html" />

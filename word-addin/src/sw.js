@@ -1,4 +1,4 @@
-const CACHE_NAME = 'statsync-cache-v5';
+const CACHE_NAME = 'statsync-cache-v6';
 const ASSETS_TO_CACHE = [
     './taskpane.html',
     './taskpane.js',

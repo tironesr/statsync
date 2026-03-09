@@ -7,10 +7,10 @@
   xsi:type="TaskPaneApp">
   
   <Id>5e8e52c1-9a1b-4d8e-9c2b-6f7a8b9c0d1e</Id>
-  <Version>1.0.2.0</Version>
+  <Version>1.0.3.0</Version>
   <ProviderName>StatSync</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="StatSync Pro" />
+  <DisplayName DefaultValue="StatSync Desktop" />
   <Description DefaultValue="Insert formatted statistics from R directly into Word" />
   <IconUrl DefaultValue="https://tironesr.github.io/statsync/assets/icon-32.png" />
   <SupportUrl DefaultValue="https://tironesr.github.io/statsync/taskpane.html" />

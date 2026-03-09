@@ -59,10 +59,42 @@ function initialize(): void {
     autocompleteMonitor.setStatistics(statsArray);
     autocompleteMonitor.start();
 
-    // 3. Status updates and UI rendering
-    if (!isAutoSyncPaused && isConnected) {
+    // 3. Handle Auto-Sync and Paused states
+    if (isAutoSyncPaused) {
+      // If paused, we DO NOT update the UI or Document, but we show "Paused" status
+      updateStatus(data, true);
+
+      // Show manual sync button while paused
+      const btnManualSync = document.getElementById("btn-manual-sync");
+      if (btnManualSync) btnManualSync.style.display = "block";
+
+      const btnLive = document.getElementById("btn-connect-server");
+      if (btnLive) {
+        if (isConnected) {
+          btnLive.innerHTML = '<span class="live-dot"></span> Live (Paused)';
+          btnLive.className = "btn btn-success paused";
+        } else {
+          btnLive.innerHTML = '<span class="live-dot"></span> Offline (Paused)';
+          btnLive.className = "btn btn-live";
+        }
+      }
+      return;
+    }
+
+    if (isConnected) {
+      // Live Mode: Update everything
       renderAll(data);
       updateStatus(data, false);
+
+      // Hide manual sync button
+      const btnManualSync = document.getElementById("btn-manual-sync");
+      if (btnManualSync) btnManualSync.style.display = "none";
+
+      const btnLive = document.getElementById("btn-connect-server");
+      if (btnLive) {
+        btnLive.innerHTML = '<span class="live-dot"></span> Live';
+        btnLive.className = "btn btn-success";
+      }
 
       try {
         const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
@@ -73,25 +105,18 @@ function initialize(): void {
         console.error("Auto sync error", e);
       }
     } else {
-      // If paused OR disconnected, just update the UI state to show current data as cached
+      // Offline Mode: Update UI with cached data, but don't auto-sync document
       renderAll(data);
-      updateStatus(data, !isConnected || isAutoSyncPaused);
+      updateStatus(data, true);
 
-      // Show/Hide manual sync button based on isLive & isAutoSyncPaused
+      // Show manual sync button
       const btnManualSync = document.getElementById("btn-manual-sync");
-      if (btnManualSync) {
-        btnManualSync.style.display = (!isConnected || isAutoSyncPaused) ? "block" : "none";
-      }
+      if (btnManualSync) btnManualSync.style.display = "block";
 
       const btnLive = document.getElementById("btn-connect-server");
       if (btnLive) {
-        if (isConnected) {
-          btnLive.innerHTML = '<span class="live-dot"></span> Live';
-          btnLive.className = "btn btn-success";
-        } else {
-          btnLive.innerHTML = '<span class="live-dot"></span> Offline';
-          btnLive.className = "btn btn-live";
-        }
+        btnLive.innerHTML = '<span class="live-dot"></span> Offline';
+        btnLive.className = "btn btn-live";
       }
     }
   });
@@ -102,6 +127,11 @@ function initialize(): void {
     renderAll(initialData);
     updateStatus(initialData, true); // true = show offline/cached state
     showPanels();
+
+    // Ensure autocomplete works even on cold-start offline
+    const statsArray = Array.isArray(initialData.statistics) ? initialData.statistics : [];
+    autocompleteMonitor.setStatistics(statsArray);
+    autocompleteMonitor.start();
   }
 }
 

@@ -445,6 +445,7 @@ function showPanels(): void {
 function renderAll(data: StatSyncProject): void {
   renderFilterChips(data);
   renderModelCards(data);
+  filterModels();
 }
 
 function renderFilterChips(data: StatSyncProject): void {

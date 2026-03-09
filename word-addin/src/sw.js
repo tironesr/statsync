@@ -1,9 +1,9 @@
-const CACHE_NAME = 'statsync-cache-v12';
+const CACHE_NAME = 'statsync-assets-v13';
 const ASSETS_TO_CACHE = [
-    './taskpane.html',
-    './taskpane.js',
-    './dialog.html',
-    './dialog.js',
+    'taskpane.html',
+    'taskpane.js',
+    'dialog.html',
+    'dialog.js',
     'https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js'
 ];
 
@@ -30,19 +30,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
-
-    // Strategy: Cache-First for everything from our origin or the Microsoft Office CDN
+    // Strategy: Cache-First, then Network + Cache update
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
+            if (cachedResponse) {
+                // Return cached version immediately for speed
+                return cachedResponse;
+            }
 
             return fetch(event.request).then((networkResponse) => {
-                // If it's a successful regular response OR an opaque response from Microsoft CDN
-                const isOfficeScript = url.hostname.includes('appsforoffice.microsoft.com');
-                const isSuccessful = networkResponse && (networkResponse.status === 200 || networkResponse.status === 0);
-
-                if (isSuccessful && (networkResponse.type === 'basic' || isOfficeScript)) {
+                // If successful or opaque (for CDN), cache for next time
+                if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseToCache);
@@ -51,10 +49,9 @@ self.addEventListener('fetch', (event) => {
                 return networkResponse;
             });
         }).catch(() => {
-            // Offline fallback
-            if (event.request.mode === 'navigate') {
-                return caches.match('./taskpane.html');
-            }
+            // No network, no cache — return nothing or handle gracefully.
+            // Do NOT return taskpane.html here as it breaks the dialog window!
+            return new Response("Offline resource not found", { status: 404, statusText: "Offline" });
         })
     );
 });

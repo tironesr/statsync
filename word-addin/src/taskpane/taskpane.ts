@@ -292,15 +292,38 @@ function setupEventHandlers(): void {
     const originalText = btnManualSync.innerHTML;
     btnManualSync.innerHTML = '🔄 Syncing...';
 
+    const data = reader.getData();
+    // Helper to get groups
+    const getGroups = (d: StatSyncProject | null) => {
+      const s = new Set<string>();
+      if (d && d.statistics) d.statistics.forEach(st => s.add(st.group || "Ungrouped"));
+      return s;
+    };
+    const oldGroups = getGroups(data);
+
     try {
       if (isConnected) {
-        await reader.refresh(); // This triggers onUpdate above
-      } else {
-        // Just force a UI refresh if offline
-        const d = reader.getData();
-        if (d) renderAll(d);
-        setStatus("Offline view refreshed", "success");
+        await reader.refresh();
       }
+
+      const newData = reader.getData();
+      const newGroups = getGroups(newData);
+
+      // Compute structural changes for the report
+      let added = 0;
+      newGroups.forEach(g => { if (!oldGroups.has(g)) added++; });
+      let deleted = 0;
+      oldGroups.forEach(g => { if (!newGroups.has(g)) deleted++; });
+
+      if (newData) {
+        renderAll(newData);
+        updateStatus(newData);
+      }
+
+      // Explicitly update Word document tags
+      const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+      showUpdateResult(res, undefined, added, deleted);
+      setStatus("✓ Sync complete", "success");
     } catch (err) {
       console.error("Manual sync failed", err);
       setStatus(`Manual sync failed: ${err}`, "error");

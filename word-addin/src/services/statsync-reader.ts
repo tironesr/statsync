@@ -22,11 +22,13 @@ export class StatSyncReader {
   }
 
   // --- Persistence for Offline Mode ---
-  private loadFromCache(): void {
-    const cached = localStorage.getItem("statsync_cached_project");
+  public loadFromCache(projectName?: string): void {
+    const key = projectName ? `statsync_cache_${projectName}` : "statsync_cached_project";
+    const cached = localStorage.getItem(key);
     if (cached) {
       try {
-        this.data = JSON.parse(cached) as StatSyncProject;
+        const parsed = JSON.parse(cached) as StatSyncProject;
+        this.data = parsed;
       } catch (e) {
         console.error("Failed to load StatSync cache", e);
       }
@@ -35,7 +37,13 @@ export class StatSyncReader {
 
   private saveToCache(): void {
     if (this.data) {
+      // Global last-seen cache
       localStorage.setItem("statsync_cached_project", JSON.stringify(this.data));
+
+      // Project-specific cache
+      if (this.data.project?.name) {
+        localStorage.setItem(`statsync_cache_${this.data.project.name}`, JSON.stringify(this.data));
+      }
     }
   }
 

@@ -29,6 +29,8 @@ let activeTypeFilter: string | null = "none";
 let isAutoSyncPaused: boolean = false;
 let isConnected: boolean = false;
 let isManualSyncing: boolean = false;
+let linkedProjectName: string | null = null;
+let hasSyncedThisConnection: boolean = false;
 
 // Autocomplete State
 let dialog: Office.Dialog | null = null;
@@ -57,11 +59,40 @@ function initialize(): void {
   setupEventHandlers();
   setupAutocomplete();
 
+  // Load project binding from Word document memory
+  try {
+    linkedProjectName = Office.context.document.settings.get("StatSyncLinkedProject");
+    if (linkedProjectName) {
+      reader.loadFromCache(linkedProjectName);
+    }
+  } catch (e) {
+    console.warn("Failed to load document settings:", e);
+  }
+
   reader.onUpdate(async (data, isLive) => {
     // 1. Update internal connection state
+    const wasOffline = !isConnected && isLive;
     isConnected = isLive;
+    if (!isConnected) hasSyncedThisConnection = false; // Reset for next connect
 
-    // 2. ALWAYS feed stats to monitor for {{ autocomplete, even if paused or offline
+    // 2. Project Memory & Binding
+    const incomingProject = data.project.name || "Untitled";
+    if (!linkedProjectName && incomingProject !== "Untitled") {
+      // First project seen, link it to this document
+      linkedProjectName = incomingProject;
+      Office.context.document.settings.set("StatSyncLinkedProject", incomingProject);
+      Office.context.document.settings.saveAsync();
+    } else if (linkedProjectName && linkedProjectName !== incomingProject) {
+      // BLOCKER: This document belongs to a different project
+      setStatus(`⚠️ Linked to '${linkedProjectName}', current is '${incomingProject}'`, "error");
+      renderAll(data);
+      updateStatus(data, true);
+      const btnManualSync = document.getElementById("btn-manual-sync") as HTMLElement;
+      if (btnManualSync) btnManualSync.style.display = "none"; // Hide sync button to prevent wrong data
+      return; // Skip data processing
+    }
+
+    // 3. ALWAYS feed stats to monitor for {{ autocomplete
     const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
     autocompleteMonitor.setStatistics(statsArray);
     autocompleteMonitor.start();
@@ -117,15 +148,23 @@ function initialize(): void {
     // 7. Update the sidebar UI immediately
     renderAll(data);
 
-    // 8. Doc Sync Logic: Update Word document tags if live
+    // 8. Doc Sync Logic: Update Word document tags
     try {
       let docRes = { updated: 0, failed: 0, unchanged: 0 };
-      if (isConnected) {
-        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id));
-      }
 
-      // Update result report: Updated: X · Added: Y · Deleted: Z
-      showUpdateResult(docRes, undefined, added, deleted);
+      // AUTO-UPDATE ON LOAD: If we just established a live connection, perform a full sync
+      if (isConnected && (!hasSyncedThisConnection || wasOffline)) {
+        hasSyncedThisConnection = true;
+        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+        showUpdateResult(docRes, undefined, added, deleted);
+      } else if (isConnected && !isAutoSyncPaused) {
+        // Normal auto-sync while working
+        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+        showUpdateResult(docRes, undefined, added, deleted);
+      } else {
+        // Show existing structural changes only
+        showUpdateResult(null, undefined, added, deleted);
+      }
     } catch (e) {
       console.error("Sync update failed:", e);
     }
@@ -704,8 +743,13 @@ function updateStatus(data: StatSyncProject, isOfflineOrPaused: boolean = false)
 
   const projectNameEl = document.getElementById("project-name");
   if (projectNameEl) {
-    projectNameEl.textContent = data.project?.name || "—";
-    if (!isConnected) projectNameEl.innerHTML += " <small>(Offline)</small>";
+    const current = data.project?.name || "Untitled";
+    if (linkedProjectName && linkedProjectName !== current && isConnected) {
+      projectNameEl.innerHTML = `⚠️ <span style="color:var(--danger)">Wrong Project: ${current}</span> (Expected: ${linkedProjectName})`;
+    } else {
+      projectNameEl.textContent = linkedProjectName || current;
+      if (!isConnected) projectNameEl.innerHTML += " <small>(Offline)</small>";
+    }
   }
 
   const lastSyncEl = document.getElementById("last-sync");

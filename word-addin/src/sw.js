@@ -1,7 +1,9 @@
-const CACHE_NAME = 'statsync-cache-v3';
+const CACHE_NAME = 'statsync-cache-v4';
 const ASSETS_TO_CACHE = [
     './taskpane.html',
     './taskpane.js',
+    './dialog.html',
+    './dialog.js',
     'https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js'
 ];
 
@@ -31,6 +33,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
+            // Return cached asset or fetch from network
             return response || fetch(event.request);
         })
     );

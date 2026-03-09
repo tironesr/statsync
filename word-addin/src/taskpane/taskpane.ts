@@ -105,22 +105,29 @@ function initialize(): void {
     let deleted = 0;
     lastKnownGroups.forEach(g => { if (!newGroups.has(g)) deleted++; });
 
+    // Auto-switch filter to "All" if models were added or if we were at "none" with new data
+    if ((added > 0 || lastKnownGroups.size === 0) && activeTypeFilter === "none" && newGroups.size > 0) {
+      activeTypeFilter = null; // Equivalent to 'All'
+    }
+
     // Update reference for next time
     lastKnownGroups = newGroups;
 
-    // Update the sidebar cards
+    // 7. Update the sidebar UI immediately
     renderAll(data);
 
-    // If live AND not paused, automatically push updates into the Word document
-    if (isConnected) {
-      try {
-        const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
-        // Show result if statistics were updated OR if models were added/deleted
-        // Show result on every sync as requested (Added: X, Deleted: Y, Updated: Z)
-        showUpdateResult(res, undefined, added, deleted);
-      } catch (e) {
-        console.error("Auto sync update failed:", e);
+    // 8. Doc Sync Logic
+    try {
+      let res = { updated: 0, failed: 0, unchanged: 0 };
+      if (isConnected) {
+        res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
       }
+
+      // Always show result if structural or document changes occurred
+      // (This now also fires when offline data is loaded)
+      showUpdateResult(res, undefined, added, deleted);
+    } catch (e) {
+      console.error("Sync update failed:", e);
     }
   });
 
@@ -285,41 +292,15 @@ function setupEventHandlers(): void {
     const originalText = btnManualSync.innerHTML;
     btnManualSync.innerHTML = '🔄 Syncing...';
 
-    const data = reader.getData();
-
-    // Helper to get unique groups (models)
-    const getGroups = (d: StatSyncProject | null) => {
-      const s = new Set<string>();
-      if (d && d.statistics) d.statistics.forEach(st => s.add(st.group || "Ungrouped"));
-      return s;
-    };
-    const oldGroups = getGroups(data);
-
     try {
-      // 1. Fetch latest directly to ensure we're fresh before syncing
       if (isConnected) {
-        await reader.refresh();
+        await reader.refresh(); // This triggers onUpdate above
+      } else {
+        // Just force a UI refresh if offline
+        const d = reader.getData();
+        if (d) renderAll(d);
+        setStatus("Offline view refreshed", "success");
       }
-
-      const newData = reader.getData();
-      const newGroups = getGroups(newData);
-
-      // 2. Identify structural changes
-      let added = 0;
-      newGroups.forEach(g => { if (!oldGroups.has(g)) added++; });
-      let deleted = 0;
-      oldGroups.forEach(g => { if (!newGroups.has(g)) deleted++; });
-
-      // 3. Update the sidebar UI immediately
-      if (newData) {
-        renderAll(newData);
-        updateStatus(newData);
-      }
-
-      // 4. Update the Word document
-      const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
-      showUpdateResult(res, undefined, added, deleted);
-      setStatus(`✓ Manual sync complete: ${res.updated} updated`, "success");
     } catch (err) {
       console.error("Manual sync failed", err);
       setStatus(`Manual sync failed: ${err}`, "error");

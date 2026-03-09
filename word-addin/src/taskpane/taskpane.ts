@@ -32,6 +32,7 @@ let isConnected: boolean = false;
 // Autocomplete State
 let dialog: Office.Dialog | null = null;
 let currentReplaceText = "";
+let lastKnownGroups = new Set<string>();
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Word) {
@@ -86,19 +87,36 @@ function initialize(): void {
 
     // 6. MAIN SYNC LOGIC: Only proceed if NOT paused
     if (isAutoSyncPaused) {
-      // While paused, do not update cards or document.
       return;
     }
 
-    // Update the sidebar cards with any new data
+    // Helper for group comparison
+    const getCurrentGroups = (d: StatSyncProject) => {
+      const s = new Set<string>();
+      if (d.statistics) d.statistics.forEach(st => s.add(st.group || "Ungrouped"));
+      return s;
+    };
+    const newGroups = getCurrentGroups(data);
+
+    // Track structural changes
+    let added = 0;
+    newGroups.forEach(g => { if (!lastKnownGroups.has(g)) added++; });
+    let deleted = 0;
+    lastKnownGroups.forEach(g => { if (!newGroups.has(g)) deleted++; });
+
+    // Update reference for next time
+    lastKnownGroups = newGroups;
+
+    // Update the sidebar cards
     renderAll(data);
 
-    // If live AND not paused, we automatically push updates into the Word document
+    // If live AND not paused, automatically push updates into the Word document
     if (isConnected) {
       try {
         const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
-        if (res.updated > 0 || res.failed > 0) {
-          showUpdateResult(res);
+        // Show result if statistics were updated OR if models were added/deleted
+        if (res.updated > 0 || res.failed > 0 || added > 0 || deleted > 0) {
+          showUpdateResult(res, undefined, added, deleted);
         }
       } catch (e) {
         console.error("Auto sync update failed:", e);
@@ -109,6 +127,10 @@ function initialize(): void {
   // Load from cache initially for offline support
   const initialData = reader.getData();
   if (initialData) {
+    const s = new Set<string>();
+    if (initialData.statistics) initialData.statistics.forEach(st => s.add(st.group || "Ungrouped"));
+    lastKnownGroups = s;
+
     renderAll(initialData);
     updateStatus(initialData, true); // true = show offline/cached state
     showPanels();

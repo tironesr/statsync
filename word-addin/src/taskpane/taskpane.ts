@@ -779,10 +779,17 @@ function showUpdateResult(
   if (error) {
     div.className = "update-result error";
     div.textContent = error;
-  } else if (result) {
-    div.className = "update-result success";
-    // Exact format requested: Added: X, Deleted: Y, Updated: Z
-    div.innerHTML = `✅ Updated: ${result.updated} · ➕ Added: ${addedModels} · 🗑️ Deleted: ${deletedModels}`;
+    div.style.display = "block";
+  } else {
+    const updatedCount = result ? result.updated : 0;
+    if (updatedCount > 0 || addedModels > 0 || deletedModels > 0) {
+      div.className = "update-result success";
+      div.innerHTML = `✅ Updated: ${updatedCount} · ➕ Added: ${addedModels} · 🗑️ Deleted: ${deletedModels}`;
+      div.style.display = "block";
+    } else {
+      div.style.display = "none";
+      return;
+    }
   }
 
   resultHideTimer = setTimeout(() => {

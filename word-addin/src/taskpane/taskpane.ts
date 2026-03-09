@@ -54,16 +54,15 @@ function initialize(): void {
     // 1. Update the isConnected state to match the reader's live status
     isConnected = isLive;
 
-    // 2. Only update UI and Document automatically if not paused AND we are currently live
-    // (If not live, we treat as paused/offline mode)
+    // 2. Feed statistics to autocomplete monitor ALWAYS, even if offline/paused
+    const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
+    autocompleteMonitor.setStatistics(statsArray);
+    autocompleteMonitor.start();
+
+    // 3. Status updates and UI rendering
     if (!isAutoSyncPaused && isConnected) {
       renderAll(data);
       updateStatus(data, false);
-
-      // Feed statistics to autocomplete monitor
-      const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
-      autocompleteMonitor.setStatistics(statsArray);
-      autocompleteMonitor.start();
 
       try {
         const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));

@@ -28,6 +28,7 @@ let activeTypeFilter: string | null = "none";
 // Auto-sync polling
 let isAutoSyncPaused: boolean = false;
 let isConnected: boolean = false;
+let isManualSyncing: boolean = false;
 
 // Autocomplete State
 let dialog: Office.Dialog | null = null;
@@ -86,8 +87,8 @@ function initialize(): void {
       btnManualSync.style.display = (isAutoSyncPaused || !isConnected) ? "block" : "none";
     }
 
-    // 6. MAIN SYNC LOGIC: Only proceed if NOT paused
-    if (isAutoSyncPaused) {
+    // 6. MAIN SYNC LOGIC: Only proceed if NOT paused and NOT manual syncing
+    if (isAutoSyncPaused || isManualSyncing) {
       return;
     }
 
@@ -287,6 +288,8 @@ function setupEventHandlers(): void {
 
   btnManualSync.onclick = async (e) => {
     e.preventDefault();
+    if (isManualSyncing) return;
+    isManualSyncing = true;
     btnManualSync.disabled = true;
     const originalText = btnManualSync.innerHTML;
     btnManualSync.innerHTML = '🔄 Syncing...';
@@ -327,6 +330,7 @@ function setupEventHandlers(): void {
       console.error("Manual sync failed", err);
       setStatus(`Manual sync failed: ${err}`, "error");
     } finally {
+      isManualSyncing = false;
       btnManualSync.innerHTML = originalText;
       btnManualSync.disabled = false;
     }

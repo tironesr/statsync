@@ -263,23 +263,40 @@ function setupEventHandlers(): void {
     const originalText = btnManualSync.innerHTML;
     btnManualSync.innerHTML = '🔄 Syncing...';
 
+    const data = reader.getData();
+
+    // Helper to get unique groups (models)
+    const getGroups = (d: StatSyncProject | null) => {
+      const s = new Set<string>();
+      if (d && d.statistics) d.statistics.forEach(st => s.add(st.group || "Ungrouped"));
+      return s;
+    };
+    const oldGroups = getGroups(data);
+
     try {
       // 1. Fetch latest directly to ensure we're fresh before syncing
       if (isConnected) {
         await reader.refresh();
       }
 
-      const data = reader.getData();
+      const newData = reader.getData();
+      const newGroups = getGroups(newData);
 
-      // 2. Update the sidebar UI immediately
-      if (data) {
-        renderAll(data);
-        updateStatus(data);
+      // 2. Identify structural changes
+      let added = 0;
+      newGroups.forEach(g => { if (!oldGroups.has(g)) added++; });
+      let deleted = 0;
+      oldGroups.forEach(g => { if (!newGroups.has(g)) deleted++; });
+
+      // 3. Update the sidebar UI immediately
+      if (newData) {
+        renderAll(newData);
+        updateStatus(newData);
       }
 
-      // 3. Update the Word document
+      // 4. Update the Word document
       const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
-      showUpdateResult(res);
+      showUpdateResult(res, undefined, added, deleted);
       setStatus(`✓ Manual sync complete: ${res.updated} updated`, "success");
     } catch (err) {
       console.error("Manual sync failed", err);
@@ -669,7 +686,12 @@ function updateStatus(data: StatSyncProject, isOfflineOrPaused: boolean = false)
   }
 }
 
-function showUpdateResult(result: { updated: number; failed: number; unchanged: number } | null, error?: string): void {
+function showUpdateResult(
+  result: { updated: number, failed: number, unchanged: number } | null,
+  error?: string,
+  addedModels: number = 0,
+  deletedModels: number = 0
+): void {
   const div = document.getElementById("update-result");
   if (!div) return;
   div.style.display = "block";
@@ -679,7 +701,13 @@ function showUpdateResult(result: { updated: number; failed: number; unchanged: 
     div.textContent = error;
   } else if (result) {
     div.className = "update-result success";
-    div.innerHTML = `✅ ${result.updated} updated · ⏸ ${result.unchanged} unchanged${result.failed > 0 ? ` · ❌ ${result.failed} failed` : ""}`;
+
+    let message = `✅ ${result.updated} updated · ⏸ ${result.unchanged} unchanged`;
+    if (result.failed > 0) message += ` · ❌ ${result.failed} failed`;
+    if (addedModels > 0) message += ` · ➕ ${addedModels} added`;
+    if (deletedModels > 0) message += ` · 🗑️ ${deletedModels} removed`;
+
+    div.innerHTML = message;
   }
 
   setTimeout(() => {

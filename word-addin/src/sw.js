@@ -1,4 +1,4 @@
-const CACHE_NAME = 'statsync-cache-v10';
+const CACHE_NAME = 'statsync-cache-v11';
 const ASSETS_TO_CACHE = [
     './taskpane.html',
     './taskpane.js',
@@ -20,7 +20,6 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         Promise.all([
             self.clients.claim(),
-            // Clean up old caches
             caches.keys().then((keys) => {
                 return Promise.all(
                     keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
@@ -31,10 +30,25 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    // Strategy: Cache-First for everything once fetched successfully.
+    // This catches dynamic assets inside office.js which were not in ASSETS_TO_CACHE.
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            // Return cached asset or fetch from network
-            return response || fetch(event.request);
+        caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) return cachedResponse;
+
+            return fetch(event.request).then((networkResponse) => {
+                // Cache the newly fetched asset (especially from Microsoft CDN)
+                if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic' || networkResponse.type === 'cors') {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return networkResponse;
+            });
+        }).catch(() => {
+            // Offline fallback
+            return caches.match('./taskpane.html');
         })
     );
 });

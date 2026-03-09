@@ -33,6 +33,7 @@ let isConnected: boolean = false;
 let dialog: Office.Dialog | null = null;
 let currentReplaceText = "";
 let lastKnownGroups = new Set<string>();
+let resultHideTimer: any = null;
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Word) {
@@ -115,9 +116,8 @@ function initialize(): void {
       try {
         const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
         // Show result if statistics were updated OR if models were added/deleted
-        if (res.updated > 0 || res.failed > 0 || added > 0 || deleted > 0) {
-          showUpdateResult(res, undefined, added, deleted);
-        }
+        // Show result on every sync as requested (Added: X, Deleted: Y, Updated: Z)
+        showUpdateResult(res, undefined, added, deleted);
       } catch (e) {
         console.error("Auto sync update failed:", e);
       }
@@ -717,6 +717,12 @@ function showUpdateResult(
 ): void {
   const div = document.getElementById("update-result");
   if (!div) return;
+
+  // Kill existing timer
+  if (resultHideTimer) {
+    clearTimeout(resultHideTimer);
+  }
+
   div.style.display = "block";
 
   if (error) {
@@ -724,17 +730,13 @@ function showUpdateResult(
     div.textContent = error;
   } else if (result) {
     div.className = "update-result success";
-
-    let message = `✅ ${result.updated} updated · ⏸ ${result.unchanged} unchanged`;
-    if (result.failed > 0) message += ` · ❌ ${result.failed} failed`;
-    if (addedModels > 0) message += ` · ➕ ${addedModels} added`;
-    if (deletedModels > 0) message += ` · 🗑️ ${deletedModels} removed`;
-
-    div.innerHTML = message;
+    // Exact format requested: Added: X, Deleted: Y, Updated: Z
+    div.innerHTML = `✅ Updated: ${result.updated} · ➕ Added: ${addedModels} · 🗑️ Deleted: ${deletedModels}`;
   }
 
-  setTimeout(() => {
+  resultHideTimer = setTimeout(() => {
     div.style.display = "none";
+    resultHideTimer = null;
   }, 4000);
 }
 

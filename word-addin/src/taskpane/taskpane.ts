@@ -684,32 +684,6 @@ function renderCardBody(
   // Show the formatted output for the selected stat
   const previewText = previewBox.querySelector(".preview-text")!;
   previewText.innerHTML = markupToHtml(selectedStat.formatted);
-
-  // ---- Insert Button ----
-  const insertBtn = document.createElement("button");
-  insertBtn.className = "btn btn-primary full-width";
-  insertBtn.style.marginTop = "12px";
-  insertBtn.innerHTML = `➕ Insert ${typeConfig.icon} ${selectedStat.label}`;
-  insertBtn.onclick = async () => {
-    insertBtn.disabled = true;
-    insertBtn.textContent = "Inserting...";
-    try {
-      // Assemble standard formatted or custom if configured
-      const fields = [...state.checkedFields];
-      const customStr = assembleFormatted(selectedStat, fields, typeConfig.assemblyOrder);
-
-      const statToInsert = { ...selectedStat, formatted: customStr };
-      await inserter.insertStatistic(statToInsert);
-      setStatus(`✓ Inserted: ${selectedStat.label}`, "success");
-    } catch (e) {
-      console.error("Insert failed", e);
-      setStatus(`Insert failed: ${e}`, "error");
-    } finally {
-      insertBtn.innerHTML = `➕ Insert ${typeConfig.icon} ${selectedStat.label}`;
-      insertBtn.disabled = false;
-    }
-  };
-  body.appendChild(insertBtn);
 }
 
 

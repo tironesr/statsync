@@ -22,8 +22,8 @@ interface CardState {
 }
 const cardStates = new Map<string, CardState>();
 
-// Active type filter
-let activeTypeFilter: string | null = null;
+// Active type filter (none = cold start, null = 'All')
+let activeTypeFilter: string | null = "none";
 
 // Auto-sync polling
 let isAutoSyncPaused: boolean = false;
@@ -641,7 +641,7 @@ function filterModels(): void {
     const types = card.dataset.types || "";
     const matchesSearch = query === "" || group.includes(query);
     const matchesType = activeTypeFilter === null || types.includes(activeTypeFilter);
-    const visible = matchesSearch && matchesType && activeTypeFilter !== "none";
+    const visible = matchesSearch && matchesType && (activeTypeFilter !== "none" || query.length > 0);
     card.style.display = visible ? "block" : "none";
     if (visible) visibleCount++;
   });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'statsync-assets-v14';
+const CACHE_NAME = 'statsync-assets-v15';
 const ASSETS_TO_CACHE = [
     './taskpane.html',
     './taskpane.js',
@@ -30,16 +30,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // Speed Logic:
+    // 1. If match in cache, return it INSTANTLY.
+    // 2. Fetch fresh copy in background and update cache (Stale-While-Revalidate).
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                // Extreme speed: return from local storage immediately
-                return cachedResponse;
-            }
-
-            // Not in mandatory cache, let's fetch it and store it for next time
-            return fetch(event.request).then((networkResponse) => {
-                // If it's a valid response (including opaque CDN scripts), cache it.
+            const fetchPromise = fetch(event.request).then((networkResponse) => {
                 if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -47,10 +45,13 @@ self.addEventListener('fetch', (event) => {
                     });
                 }
                 return networkResponse;
+            }).catch(() => {
+                // Network failed (offline), if we have a cache, it was already returned by match()
+                // If not, return nothing.
             });
-        }).catch(() => {
-            // No network, no cache.
-            return new Response("Offline resource unavailable", { status: 503 });
+
+            // Return cached response immediately if it exists, otherwise wait for network
+            return cachedResponse || fetchPromise;
         })
     );
 });

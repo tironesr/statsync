@@ -99,15 +99,15 @@ function initialize(): void {
     };
     const newGroups = getCurrentGroups(data);
 
-    // Track structural changes
+    // Track structural changes (Added / Deleted)
     let added = 0;
     newGroups.forEach(g => { if (!lastKnownGroups.has(g)) added++; });
     let deleted = 0;
     lastKnownGroups.forEach(g => { if (!newGroups.has(g)) deleted++; });
 
-    // Auto-switch filter to "All" if models were added or if we were at "none" with new data
-    if ((added > 0 || lastKnownGroups.size === 0) && activeTypeFilter === "none" && newGroups.size > 0) {
-      activeTypeFilter = null; // Equivalent to 'All'
+    // AUTO-OPEN: If we have data and were in the 'none' state, show everything
+    if (activeTypeFilter === "none" && newGroups.size > 0) {
+      activeTypeFilter = null; // null = 'All'
     }
 
     // Update reference for next time
@@ -116,16 +116,15 @@ function initialize(): void {
     // 7. Update the sidebar UI immediately
     renderAll(data);
 
-    // 8. Doc Sync Logic
+    // 8. Doc Sync Logic: Update Word document tags if live
     try {
-      let res = { updated: 0, failed: 0, unchanged: 0 };
+      let docRes = { updated: 0, failed: 0, unchanged: 0 };
       if (isConnected) {
-        res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id));
       }
 
-      // Always show result if structural or document changes occurred
-      // (This now also fires when offline data is loaded)
-      showUpdateResult(res, undefined, added, deleted);
+      // Update result report: Updated: X · Added: Y · Deleted: Z
+      showUpdateResult(docRes, undefined, added, deleted);
     } catch (e) {
       console.error("Sync update failed:", e);
     }

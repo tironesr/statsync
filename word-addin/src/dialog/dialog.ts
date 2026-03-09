@@ -32,11 +32,9 @@ let currentNavIndex = -1;
 let currentStatForConfig: StatisticEntry | null = null;
 let currentCheckedFields = new Set<string>();
 
-window.addEventListener("DOMContentLoaded", () => {
+Office.onReady((info) => {
     initialize();
 });
-
-Office.onReady(); // Modern Office.js recommendation for simple dialogs
 
 function initialize(): void {
     const raw = localStorage.getItem("statsync_dialog_data");

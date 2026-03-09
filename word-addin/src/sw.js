@@ -1,9 +1,9 @@
-const CACHE_NAME = 'statsync-assets-v13';
+const CACHE_NAME = 'statsync-assets-v14';
 const ASSETS_TO_CACHE = [
-    'taskpane.html',
-    'taskpane.js',
-    'dialog.html',
-    'dialog.js',
+    './taskpane.html',
+    './taskpane.js',
+    './dialog.html',
+    './dialog.js',
     'https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js'
 ];
 
@@ -30,16 +30,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    // Strategy: Cache-First, then Network + Cache update
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
-                // Return cached version immediately for speed
+                // Extreme speed: return from local storage immediately
                 return cachedResponse;
             }
 
+            // Not in mandatory cache, let's fetch it and store it for next time
             return fetch(event.request).then((networkResponse) => {
-                // If successful or opaque (for CDN), cache for next time
+                // If it's a valid response (including opaque CDN scripts), cache it.
                 if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -49,9 +49,8 @@ self.addEventListener('fetch', (event) => {
                 return networkResponse;
             });
         }).catch(() => {
-            // No network, no cache — return nothing or handle gracefully.
-            // Do NOT return taskpane.html here as it breaks the dialog window!
-            return new Response("Offline resource not found", { status: 404, statusText: "Offline" });
+            // No network, no cache.
+            return new Response("Offline resource unavailable", { status: 503 });
         })
     );
 });

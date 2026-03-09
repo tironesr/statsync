@@ -56,6 +56,10 @@ module.exports = async (env, options) => {
             to: "assets",
             noErrorOnMissing: true,
           },
+          {
+            from: "src/sw.js",
+            to: "sw.js",
+          },
         ],
       }),
     ],

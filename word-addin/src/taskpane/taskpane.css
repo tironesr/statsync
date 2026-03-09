@@ -730,20 +730,31 @@ body {
 
 /* ======================== AUTOCOMPLETE POPUP ======================== */
 .autocomplete-popup {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: 10px;
   background: var(--surface);
   border: 1px solid var(--primary);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-lg), 0 0 0 3px var(--primary-ring);
+  box-shadow: var(--shadow-lg), 0 0 0 4px var(--primary-ring);
   overflow: hidden;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  z-index: 1000;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  animation: popupIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.autocomplete-popup.visible {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes popupIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .autocomplete-header {
@@ -853,6 +864,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-style: italic;
 }
 
 .autocomplete-hint {

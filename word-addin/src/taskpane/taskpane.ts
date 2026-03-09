@@ -36,6 +36,13 @@ Office.onReady((info) => {
 });
 
 function initialize(): void {
+  // --- Service Worker Registration for Offline Mode ---
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('StatSync Offline Worker registered', reg))
+      .catch((err) => console.warn('Offline Worker failed:', err));
+  }
+
   reader = new StatSyncReader();
   inserter = new WordInserter();
   autocompleteMonitor = new AutocompleteMonitor();
@@ -271,14 +278,76 @@ let dialog: Office.Dialog | null = null;
 let currentReplaceText = "";
 
 function setupAutocomplete(): void {
-  // We no longer use the taskpane-based autocomplete popup
-  // Connect monitor to trigger the Office dialog instead
+  const popup = document.getElementById("autocomplete-popup") as HTMLElement;
+  const list = popup.querySelector(".autocomplete-list") as HTMLElement;
+  const triggerEl = popup.querySelector(".autocomplete-trigger-text") as HTMLElement;
+
+  let selectedIndex = 0;
+  let currentSuggestions: any[] = [];
+
   autocompleteMonitor.onSuggestions((suggestions, triggerText) => {
-    // Check if we should open the dialog
-    if (triggerText && !dialog) {
-      openAutocompleteDialog(triggerText);
+    if (!triggerText || suggestions.length === 0) {
+      popup.style.display = "none";
+      return;
+    }
+
+    currentSuggestions = suggestions;
+    selectedIndex = 0;
+    triggerEl.textContent = triggerText;
+    popup.style.display = "block";
+    renderAutocompleteList(list, suggestions);
+  });
+
+  // Handle keyboard for the popup
+  document.addEventListener("keydown", async (e) => {
+    if (popup.style.display === "none") return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % currentSuggestions.length;
+      renderAutocompleteList(list, currentSuggestions);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+      renderAutocompleteList(list, currentSuggestions);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const selected = currentSuggestions[selectedIndex];
+      if (selected) {
+        await inserter.replaceTextAndInsert(currentReplaceText, selected.stat);
+        popup.style.display = "none";
+        autocompleteMonitor.dismiss();
+        setTimeout(() => autocompleteMonitor.start(), 1000);
+      }
+    } else if (e.key === "Escape") {
+      popup.style.display = "none";
+      autocompleteMonitor.ignoreCurrent();
+      autocompleteMonitor.dismiss();
+      setTimeout(() => autocompleteMonitor.start(), 1000);
     }
   });
+
+  function renderAutocompleteList(container: HTMLElement, suggestions: any[]) {
+    container.innerHTML = "";
+    suggestions.forEach((s, i) => {
+      const item = document.createElement("div");
+      item.className = "autocomplete-item" + (i === selectedIndex ? " selected" : "");
+      item.innerHTML = `
+        <div class="autocomplete-item-header">
+          <span class="autocomplete-item-icon">${s.icon}</span>
+          <span class="autocomplete-item-label">${escapeHtml(s.displayLabel)}</span>
+        </div>
+        <div class="autocomplete-item-preview">${escapeHtml(s.preview)}</div>
+      `;
+      item.onclick = async () => {
+        await inserter.replaceTextAndInsert(currentReplaceText, s.stat);
+        popup.style.display = "none";
+        autocompleteMonitor.dismiss();
+        setTimeout(() => autocompleteMonitor.start(), 1000);
+      };
+      container.appendChild(item);
+    });
+  }
 }
 
 function openAutocompleteDialog(triggerText: string): void {
@@ -615,6 +684,32 @@ function renderCardBody(
   // Show the formatted output for the selected stat
   const previewText = previewBox.querySelector(".preview-text")!;
   previewText.innerHTML = markupToHtml(selectedStat.formatted);
+
+  // ---- Insert Button ----
+  const insertBtn = document.createElement("button");
+  insertBtn.className = "btn btn-primary full-width";
+  insertBtn.style.marginTop = "12px";
+  insertBtn.innerHTML = `➕ Insert ${typeConfig.icon} ${selectedStat.label}`;
+  insertBtn.onclick = async () => {
+    insertBtn.disabled = true;
+    insertBtn.textContent = "Inserting...";
+    try {
+      // Assemble standard formatted or custom if configured
+      const fields = [...state.checkedFields];
+      const customStr = assembleFormatted(selectedStat, fields, typeConfig.assemblyOrder);
+
+      const statToInsert = { ...selectedStat, formatted: customStr };
+      await inserter.insertStatistic(statToInsert);
+      setStatus(`✓ Inserted: ${selectedStat.label}`, "success");
+    } catch (e) {
+      console.error("Insert failed", e);
+      setStatus(`Insert failed: ${e}`, "error");
+    } finally {
+      insertBtn.innerHTML = `➕ Insert ${typeConfig.icon} ${selectedStat.label}`;
+      insertBtn.disabled = false;
+    }
+  };
+  body.appendChild(insertBtn);
 }
 
 

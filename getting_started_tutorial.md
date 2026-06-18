@@ -55,7 +55,7 @@ Open **RStudio** and run the following command in the console to install the R p
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 
 # Install StatSync directly from GitHub
-remotes::install_github("your-github-username/statsync")
+remotes::install_github("tironesr/statsync", subdir = "statsync")
 ```
 
 ---

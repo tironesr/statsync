@@ -61,3 +61,4 @@ importFrom(rlang, enquos, eval_tidy, quo_get_expr, "%||%")
 importFrom(stats, anova, cor, cor.test, family, formula,
            median, na.omit, nobs, pf, sd, t.test)
 importFrom(utils, head)
+export(sync_free_port)

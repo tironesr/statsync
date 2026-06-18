@@ -448,7 +448,7 @@ function setupEventHandlers(): void {
     btnRemoveProject.onclick = (e) => {
       e.preventDefault();
       const selected = select.value;
-      if (selected && confirm(`Remove offline cache for project '${selected}'?`)) {
+      if (selected) {
         localStorage.removeItem(`statsync_cache_${selected}`);
         populateProjectDropdown();
         if (linkedProjectName === selected) {

@@ -182,7 +182,7 @@ sync_serve <- function(project_name = "StatSync Project", ..., port = 8877,
     httpuv::startServer("127.0.0.1", port, app)
   }, error = function(e) {
     if (grepl("already in use", e$message) || grepl("Failed to create server", e$message)) {
-      stop(sprintf("\n\n\u274c ERROR: Port %d is already in use by another StatSync server.\n\nPlease run `sync_stop()` in the console to shut down the existing server before starting a new one.\n", port), call. = FALSE)
+      stop(sprintf("\n\n\u274c ERROR: Port %d is already in use by another StatSync server (or a background R session).\n\n1. Run `sync_stop()` to shut down the server in this session.\n2. If that fails, an old invisible R session crashed while holding the port. Run `sync_free_port()` to forcibly kill the orphaned process, or simply restart R.\n", port), call. = FALSE)
     } else {
       stop(e$message, call. = FALSE)
     }

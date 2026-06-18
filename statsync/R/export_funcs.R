@@ -295,3 +295,38 @@ sync_destroy <- function(project_name) {
   
   invisible(NULL)
 }
+
+#' Forcibly free the StatSync port
+#'
+#' Kills any orphaned background processes that are holding the StatSync port (8877).
+#' This is useful if `sync_serve()` says the port is already in use, but `sync_stop()` 
+#' says no server is currently running (which happens when an R session crashes in the background).
+#'
+#' @return Invisible NULL.
+#' @export
+sync_free_port <- function() {
+  port <- 8877
+  os <- .Platform$OS.type
+  
+  if (os == "windows") {
+    out <- suppressWarnings(system(sprintf("netstat -ano | findstr :%d", port), intern = TRUE))
+    if (length(out) > 0) {
+      pid <- tail(strsplit(trimws(out[1]), "\\s+")[[1]], 1)
+      system(sprintf("taskkill /PID %s /F", pid), ignore.stdout = TRUE, ignore.stderr = TRUE)
+      message(sprintf("\u2714 Successfully killed orphaned background process (PID %s) holding port %d.", pid, port))
+    } else {
+      message(sprintf("\u2139 Port %d is not currently in use.", port))
+    }
+  } else {
+    out <- suppressWarnings(system(sprintf("lsof -t -i:%d", port), intern = TRUE))
+    if (length(out) > 0) {
+      pid <- out[1]
+      system(sprintf("kill -9 %s", pid))
+      message(sprintf("\u2714 Successfully killed orphaned background process (PID %s) holding port %d.", pid, port))
+    } else {
+      message(sprintf("\u2139 Port %d is not currently in use.", port))
+    }
+  }
+  
+  invisible(NULL)
+}

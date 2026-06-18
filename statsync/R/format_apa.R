@@ -18,8 +18,8 @@
 #' @return Character string
 #' @export
 #' @examples
-#' fmt_p(0.043)   # "{i}p{/i} = .043"
-#' fmt_p(0.0003)  # "{i}p{/i} < .001"
+#' fmt_p(0.043)
+#' fmt_p(0.0003)
 fmt_p <- function(p, digits = 3, include_p = TRUE, markup = TRUE) {
   if (is.na(p)) return(NA_character_)
   
@@ -68,14 +68,14 @@ format_decimal <- function(x, digits = 2, leading_zero = TRUE) {
 #' @return Character string
 #' @export
 fmt_ci <- function(lower, upper, digits = 2, level = 95,
-                   bracket_type = "square", markup = TRUE) {
+                   bracket_type = "square", markup = TRUE, leading_zero = TRUE) {
   open  <- if (bracket_type == "square") "[" else "("
   close <- if (bracket_type == "square") "]" else ")"
   
   paste0(level, "% CI ",
          open,
-         format_decimal(lower, digits), ", ",
-         format_decimal(upper, digits),
+         format_decimal(lower, digits, leading_zero), ", ",
+         format_decimal(upper, digits, leading_zero),
          close)
 }
 
@@ -89,11 +89,11 @@ fmt_ci <- function(lower, upper, digits = 2, level = 95,
 #' @param markup Include italic markup tags
 #' @return Character string
 #' @export
-fmt_t <- function(t_value, df, p, d = NULL, digits = 2, markup = TRUE) {
+fmt_t <- function(t_value, df, p, d = NULL, ci_lower = NULL, ci_upper = NULL, digits = 2, markup = TRUE) {
   t_sym <- if (markup) "{i}t{/i}" else "t"
   d_sym <- if (markup) "{i}d{/i}" else "d"
   
-  df_fmt <- if (df %% 1 == 0) format_decimal(df, 0) else format_decimal(df, 2)
+  df_fmt <- if (is.na(df)) "NA" else if (df %% 1 == 0) format_decimal(df, 0) else format_decimal(df, 2)
   
   base <- paste0(
     t_sym, "(", df_fmt, ") = ",
@@ -102,10 +102,14 @@ fmt_t <- function(t_value, df, p, d = NULL, digits = 2, markup = TRUE) {
   )
   
   if (!is.null(d) && !is.na(d)) {
-    paste0(base, ", ", d_sym, " = ", format_decimal(d, digits))
-  } else {
-    base
+    base <- paste0(base, ", ", d_sym, " = ", format_decimal(d, digits))
   }
+  
+  if (!is.null(ci_lower) && !is.null(ci_upper) && !is.na(ci_lower) && !is.na(ci_upper)) {
+    base <- paste0(base, ", ", fmt_ci(ci_lower, ci_upper, digits, markup = markup))
+  }
+  
+  base
 }
 
 #' Format a t-test result from a regression coefficient
@@ -161,7 +165,7 @@ fmt_f <- function(f_value, df1, df2, p, eta_sq = NULL,
   if (!is.null(eta_sq) && !is.na(eta_sq)) {
     if (partial) {
       # η²p — eta is Greek so not italicized, but subscript p is
-      eta_label <- if (markup) "\u03B7\u00B2{i}p{/i}" else "\u03B7\u00B2p"
+      eta_label <- if (markup) "\u03B7\u00B2{sub}{i}p{/i}{/sub}" else "\u03B7\u00B2p"
     } else {
       eta_label <- "\u03B7\u00B2"
     }
@@ -182,13 +186,16 @@ fmt_f <- function(f_value, df1, df2, p, eta_sq = NULL,
 #' @param markup Include italic markup tags
 #' @return Character string
 #' @export
-fmt_chi <- function(chi_value, df, p, v = NULL, digits = 2, markup = TRUE) {
+fmt_chi <- function(chi_value, df, p, n = NULL, v = NULL, digits = 2, markup = TRUE) {
   # χ² is not italicized (Greek letter)
   # but V in Cramér's V is italic
   v_sym <- if (markup) "{i}V{/i}" else "V"
+  n_sym <- if (markup) "{i}N{/i}" else "N"
+  
+  n_fmt <- if (!is.null(n) && !is.na(n)) paste0(", ", n_sym, " = ", n) else ""
   
   base <- paste0(
-    "\u03C7\u00B2(", df, ") = ",
+    "\u03C7\u00B2(", df, n_fmt, ") = ",
     format_decimal(chi_value, digits), ", ",
     fmt_p(p, markup = markup)
   )
@@ -219,14 +226,14 @@ fmt_r <- function(r, p = NULL, df = NULL, ci_lower = NULL, ci_upper = NULL,
   # τ (tau) is Greek so not italic for Kendall
   symbol <- switch(method,
                    pearson  = if (markup) "{i}r{/i}" else "r",
-                   spearman = if (markup) "{i}r{/i}{i}s{/i}" else "rs",
+                   spearman = if (markup) "{i}r{/i}{sub}s{/sub}" else "rs",
                    kendall  = "\u03C4",  # tau, not italicized
                    if (markup) "{i}r{/i}" else "r"
   )
   
   parts <- symbol
   
-  if (!is.null(df)) {
+  if (!is.null(df) && !is.na(df)) {
     parts <- paste0(parts, "(", df, ")")
   }
   
@@ -235,7 +242,7 @@ fmt_r <- function(r, p = NULL, df = NULL, ci_lower = NULL, ci_upper = NULL,
   
   if (!is.null(ci_lower) && !is.null(ci_upper)) {
     parts <- paste0(parts, ", ",
-                    fmt_ci(ci_lower, ci_upper, digits, markup = markup))
+                    fmt_ci(ci_lower, ci_upper, digits, markup = markup, leading_zero = FALSE))
   }
   
   if (!is.null(p)) {
@@ -280,7 +287,7 @@ fmt_coef <- function(estimate, se = NULL, statistic = NULL, p = NULL,
     parts <- paste0(parts, ", ", se_sym, " = ", format_decimal(se, digits))
   }
   
-  if (!is.null(ci_lower) && !is.null(ci_upper)) {
+  if (!is.null(ci_lower) && !is.null(ci_upper) && !is.na(ci_lower) && !is.na(ci_upper)) {
     parts <- paste0(parts, ", ",
                     fmt_ci(ci_lower, ci_upper, digits, markup = markup))
   }
@@ -351,5 +358,7 @@ strip_markup <- function(x) {
   x <- gsub("\\{/i\\}", "", x)
   x <- gsub("\\{b\\}", "", x)
   x <- gsub("\\{/b\\}", "", x)
+  x <- gsub("\\{sub\\}", "", x)
+  x <- gsub("\\{/sub\\}", "", x)
   x
 }

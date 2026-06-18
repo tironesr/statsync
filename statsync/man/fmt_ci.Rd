@@ -10,7 +10,8 @@ fmt_ci(
   digits = 2,
   level = 95,
   bracket_type = "square",
-  markup = TRUE
+  markup = TRUE,
+  leading_zero = TRUE
 )
 }
 \arguments{

@@ -13,9 +13,8 @@ RoxygenNote: 7.3.3
 Imports:
     broom,
     dplyr,
-    glue,
     jsonlite,
-    stringr
+    rlang
 Suggests:
     broom.mixed,
     httpuv,

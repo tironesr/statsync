@@ -21,3 +21,7 @@ Character string
 \description{
 Format a p-value in APA style
 }
+\examples{
+fmt_p(0.043)
+fmt_p(0.0003)
+}

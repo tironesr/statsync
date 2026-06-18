@@ -35,7 +35,7 @@ cat("\nGenerating and syncing models to the add-in...\n")
 cat("-> Syncing: Descriptive Statistics\n")
 sync_update(iris)
 
-stop# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # 2. Linear Models (OLS Regression)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Linear Model\n")
@@ -48,8 +48,7 @@ sync_update(lm_mod)
 cat("-> Syncing: Nested Linear Model Comparison (ANOVA)\n")
 lm_mod_reduced <- lm(mpg ~ wt, data = mtcars)
 nested_lm_comp <- anova(lm_mod_reduced, lm_mod)
-sync_update(nested_lm_comp, label = "Nested Model Comp: LM (F-Test)")
-
+sync_update(nested_lm_comp, label = "Nfwefewf")
 # ------------------------------------------------------------------------------
 # 4. Generalized Linear Models (Logistic Regression / Odds Ratios)
 # ------------------------------------------------------------------------------
@@ -61,7 +60,7 @@ sync_update(glm_mod)
 # 5. Nested Model Comparisons (GLM / Chi-Square)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Nested GLM Comparison (Chi-Square)\n")
-glm_mod_reduced <- glm(vs ~ gp, data = mtcars, family = "binomial")
+glm_mod_reduced <- glm(vs ~ wt, data = mtcars, family = "binomial")
 nested_glm_comp <- anova(glm_mod_reduced, glm_mod, test = "Chisq")
 
 
@@ -79,7 +78,7 @@ sync_update(lmer_mod)
 # ------------------------------------------------------------------------------
 cat("-> Syncing: Standard Analysis of Variance\n")
 aov_mod <- aov(yield ~ block + N * P + K, data = npk)
-sync_update(aov_mod, label = "ANOVA: Crop Yield")
+sync_update(aov_mod)
 
 # ------------------------------------------------------------------------------
 # 8. car::Anova (Type II / III Tests)
@@ -128,8 +127,3 @@ cat("You can now open the StatSync Word Add-in and refresh to verify the outputs
 cat("Remember to leave this R session running while you test in Word.\n")
 cat("Run `sync_stop()` when you are finished testing to shut down the server.\n")
 cat("==============================================================================\n")
-
-
-#Add manual sync button when autosync is turned off
-#StatSync should check for updates on models already inserted into the text when a live connection is established (e.g., you close Word, make updates to your code push your updates, re-open word... you want those updates to be reflected)
-#There needs to be an offline mode

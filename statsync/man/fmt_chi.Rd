@@ -4,7 +4,7 @@
 \alias{fmt_chi}
 \title{Format a chi-square test result}
 \usage{
-fmt_chi(chi_value, df, p, v = NULL, digits = 2, markup = TRUE)
+fmt_chi(chi_value, df, p, n = NULL, v = NULL, digits = 2, markup = TRUE)
 }
 \arguments{
 \item{chi_value}{Chi-square statistic}

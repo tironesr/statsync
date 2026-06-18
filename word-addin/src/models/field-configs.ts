@@ -54,6 +54,7 @@ export const FIELD_CONFIGS: Record<string, TestTypeConfig> = {
     icon: "📉",
     fields: [
       { key: "estimate", label: "Estimate (b)", apaDefault: true, category: "core" },
+      { key: "std_estimate", label: "Std. Estimate (β)", apaDefault: false, category: "core" },
       { key: "se", label: "Standard error", apaDefault: true, category: "core" },
       { key: "ci_lower", label: "95% CI", apaDefault: true, category: "ci" },
       { key: "t", label: "Test statistic (t)", apaDefault: true, category: "core" },
@@ -61,7 +62,7 @@ export const FIELD_CONFIGS: Record<string, TestTypeConfig> = {
       { key: "p", label: "p-value", apaDefault: true, category: "core" },
       { key: "partial_eta_sq", label: "Partial η²", apaDefault: false, category: "effect_size" },
     ],
-    assemblyOrder: ["estimate", "se", "ci_lower", "t", "df_residual", "p", "partial_eta_sq"],
+    assemblyOrder: ["estimate", "std_estimate", "se", "ci_lower", "t", "df_residual", "p", "partial_eta_sq"],
   },
 
   model_fit: {
@@ -99,10 +100,11 @@ export const FIELD_CONFIGS: Record<string, TestTypeConfig> = {
     fields: [
       { key: "chi_sq", label: "χ² statistic", apaDefault: true, category: "core" },
       { key: "df", label: "Degrees of freedom", apaDefault: true, category: "core" },
+      { key: "n", label: "Sample size (N)", apaDefault: true, category: "core" },
       { key: "p", label: "p-value", apaDefault: true, category: "core" },
       { key: "cramers_v", label: "Cramér's V", apaDefault: true, category: "effect_size" },
     ],
-    assemblyOrder: ["chi_sq", "df", "p", "cramers_v"],
+    assemblyOrder: ["chi_sq", "df", "n", "p", "cramers_v"],
   },
 
   odds_ratio: {
@@ -130,6 +132,30 @@ export const FIELD_CONFIGS: Record<string, TestTypeConfig> = {
       { key: "n", label: "Sample size (n)", apaDefault: false, category: "core" },
     ],
     assemblyOrder: ["mean", "sd", "n", "median", "min", "max"],
+  },
+
+  mean_diff: {
+    label: "Mean Difference",
+    icon: "⚖️",
+    fields: [
+      { key: "difference", label: "Mean Difference", apaDefault: true, category: "core" },
+      { key: "ci_lower", label: "95% CI", apaDefault: true, category: "ci" },
+      { key: "se", label: "Standard error", apaDefault: false, category: "core" },
+      { key: "t", label: "t statistic", apaDefault: false, category: "core" },
+      { key: "df", label: "Degrees of freedom", apaDefault: false, category: "core" },
+      { key: "p", label: "p-value", apaDefault: false, category: "core" },
+    ],
+    assemblyOrder: ["difference", "ci_lower", "se", "t", "df", "p"],
+  },
+
+  custom: {
+    label: "Custom Statistic",
+    icon: "📌",
+    fields: [
+      { key: "value", label: "Value", apaDefault: true, category: "core" },
+      { key: "p", label: "p-value", apaDefault: false, category: "core" },
+    ],
+    assemblyOrder: ["value", "p"],
   },
 };
 

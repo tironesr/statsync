@@ -13,7 +13,7 @@
 #' @export
 sync_regression_table <- function(..., conf_level = 0.95,
                                   stars = TRUE, notes = NULL,
-                                  digits = 2) {
+                                  digits = 2, caption = NULL) {
   models <- list(...)
   if (is.null(names(models))) {
     names(models) <- paste("Model", seq_along(models))
@@ -67,8 +67,7 @@ sync_regression_table <- function(..., conf_level = 0.95,
           list(value = "")
         ))
       } else {
-        p_formatted <- format_decimal(row_data$p.value, 3,
-                                      leading_zero = FALSE)
+        p_formatted <- fmt_p(row_data$p.value, include_p = FALSE, markup = FALSE)
         est_formatted <- format_decimal(row_data$estimate, digits)
         
         if (stars) {
@@ -111,8 +110,9 @@ sync_regression_table <- function(..., conf_level = 0.95,
       list(value = ""),
       list(value = "")
     ))
+    n_count <- if ("nobs" %in% names(gl)) gl$nobs else tryCatch(nobs(models[[name]]), error = function(e) NA_integer_)
     fit_row_n <- c(fit_row_n, list(
-      list(value = as.character(gl$nobs)),
+      list(value = if (!is.na(n_count)) as.character(n_count) else ""),
       list(value = ""),
       list(value = "")
     ))
@@ -133,7 +133,7 @@ sync_regression_table <- function(..., conf_level = 0.95,
     list(
       id = paste0("reg_table_",
                   paste(names(models), collapse = "_")),
-      caption = "Regression Results",
+      caption = caption %||% "Regression Results",
       note = notes,
       headers = list(headers, sub_headers),
       rows = rows,
@@ -158,12 +158,16 @@ sync_correlation_table <- function(data, vars = NULL, method = "pearson",
   cor_mat <- cor(subset_data, use = "pairwise.complete.obs",
                  method = method)
   p_mat <- matrix(NA, n, n)
-  for (i in 1:(n - 1)) {
-    for (j in (i + 1):n) {
-      test <- cor.test(subset_data[[i]], subset_data[[j]],
-                       method = method)
-      p_mat[i, j] <- test$p.value
-      p_mat[j, i] <- test$p.value
+  if (n > 1) {
+    for (i in 1:(n - 1)) {
+      for (j in (i + 1):n) {
+        test <- tryCatch(
+          cor.test(subset_data[[i]], subset_data[[j]], method = method),
+          error = function(e) list(p.value = NA_real_)
+        )
+        p_mat[i, j] <- test$p.value
+        p_mat[j, i] <- test$p.value
+      }
     }
   }
   

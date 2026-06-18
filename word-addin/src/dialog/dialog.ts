@@ -94,8 +94,10 @@ function initialize(): void {
     if (prefill.length > 0) {
         searchInput.value = prefill;
         searchClear.style.display = "block";
+        const query = prefill.toLowerCase();
         const filtered = allGroups.filter((g) =>
-            g.groupName.toLowerCase().includes(prefill.toLowerCase())
+            g.groupName.toLowerCase().includes(query) ||
+            g.stats.some(s => s.label.toLowerCase().includes(query))
         );
         renderGroups(filtered);
     }
@@ -410,6 +412,13 @@ function renderGroups(groups: GroupData[]): void {
             container.appendChild(groupEl);
         }
     });
+    
+    // Auto-select the first item so Enter works immediately
+    const items = getVisibleNavItems();
+    if (items.length > 0) {
+        currentNavIndex = 0;
+        updateSelection(items);
+    }
 }
 
 function selectStat(stat: StatisticEntry): void {
@@ -452,8 +461,5 @@ function markupToHtml(text: string): string {
 function escapeHtml(text: string): string {
     const div = document.createElement("div");
     div.textContent = text;
-    let escaped = div.innerHTML;
-    escaped = escaped.replace(/\{i\}/g, "{i}").replace(/\{\/i\}/g, "{/i}");
-    escaped = escaped.replace(/\{b\}/g, "{b}").replace(/\{\/b\}/g, "{/b}");
-    return escaped;
+    return div.innerHTML;
 }

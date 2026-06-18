@@ -9,7 +9,8 @@ sync_regression_table(
   conf_level = 0.95,
   stars = TRUE,
   notes = NULL,
-  digits = 2
+  digits = 2,
+  caption = NULL
 )
 }
 \arguments{

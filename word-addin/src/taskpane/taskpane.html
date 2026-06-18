@@ -21,6 +21,7 @@
           <p class="status-text" id="status">No data loaded</p>
         </div>
         <span class="version-badge">v1.0</span>
+        <span class="version-badge success" id="apa-badge" style="margin-left: 6px;">✓ APA 7th</span>
       </div>
     </header>
 
@@ -44,6 +45,18 @@
       <div class="server-config" id="server-config" style="display: none">
         <input type="text" id="server-url" placeholder="http://localhost:8877" value="http://localhost:8877" />
         <button class="btn btn-small btn-primary" id="btn-server-go">Connect</button>
+      </div>
+      <!-- Project Selection -->
+      <div class="project-selector" id="project-selector" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+        <label for="project-select" style="font-size: 11px; font-weight: 600; color: var(--text-secondary);">Active Project:</label>
+        <div style="display: flex; gap: 4px; align-items: center;">
+          <select id="project-select" style="flex: 1; padding: 6px 8px; border-radius: var(--radius-xs); border: 1px solid var(--border); font-size: 12px; font-family: inherit; color: var(--text); background-color: var(--surface);">
+            <option value="">-- Select or link a project --</option>
+          </select>
+          <button id="btn-remove-project" class="btn btn-secondary" style="padding: 4px 6px; font-size: 12px; display: none;" title="Remove this offline project from cache">
+            🗑️
+          </button>
+        </div>
       </div>
     </section>
 

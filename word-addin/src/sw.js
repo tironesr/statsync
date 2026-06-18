@@ -1,4 +1,4 @@
-const CACHE_NAME = 'statsync-assets-v16';
+const CACHE_NAME = 'statsync-assets-v17';
 const ASSETS_TO_CACHE = [
     './taskpane.html',
     './taskpane.js',
@@ -32,6 +32,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
+    // Only intercept same-origin static assets or the Office.js CDN
+    const isSameOrigin = event.request.url.startsWith(self.location.origin);
+    const isOfficeJs = event.request.url.includes('appsforoffice.microsoft.com');
+    if (!isSameOrigin && !isOfficeJs) {
+        return; // Bypass service worker cache for external API calls
+    }
+
     // Speed Logic:
     // 1. If match in cache, return it INSTANTLY.
     // 2. Fetch fresh copy in background and update cache (Stale-While-Revalidate).
@@ -47,10 +54,14 @@ self.addEventListener('fetch', (event) => {
                 return networkResponse;
             }).catch(() => {
                 // Network failed (offline), if we have a cache, it was already returned by match()
-                // If not, return nothing.
+                // If not, return a fallback response.
+                return new Response("Offline", { status: 503, statusText: "Offline" });
             });
 
-            // Return cached response immediately if it exists, otherwise wait for network
+            // Track the async fetch work
+            event.waitUntil(fetchPromise);
+
+            // Important: Return cached immediately, don't wait for network
             return cachedResponse || fetchPromise;
         })
     );

@@ -17,32 +17,47 @@ export class StatSyncReader {
   private onUpdateCallbacks: Array<(data: StatSyncProject, isLive: boolean) => void> = [];
   private isLive: boolean = false;
 
+  private isStorageAvailable(): boolean {
+    try {
+      return typeof window !== "undefined" && typeof window.localStorage !== "undefined" && window.localStorage !== null;
+    } catch (e) {
+      return false;
+    }
+  }
+
   constructor() {
-    this.loadFromCache();
+    // Explicitly do NOT load from cache automatically.
+    // The taskpane must explicitly call loadFromCache(projectName) based on document bindings.
   }
 
   // --- Persistence for Offline Mode ---
   public loadFromCache(projectName?: string): void {
+    if (!this.isStorageAvailable()) return;
     const key = projectName ? `statsync_cache_${projectName}` : "statsync_cached_project";
-    const cached = localStorage.getItem(key);
-    if (cached) {
-      try {
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached) {
         const parsed = JSON.parse(cached) as StatSyncProject;
         this.data = parsed;
-      } catch (e) {
-        console.error("Failed to load StatSync cache", e);
       }
+    } catch (e) {
+      console.error("Failed to load StatSync cache", e);
     }
   }
 
   private saveToCache(): void {
+    if (!this.isStorageAvailable()) return;
     if (this.data) {
-      // Global last-seen cache
-      localStorage.setItem("statsync_cached_project", JSON.stringify(this.data));
+      try {
+        // Global last-seen cache
+        localStorage.setItem("statsync_cached_project", JSON.stringify(this.data));
 
-      // Project-specific cache
-      if (this.data.project?.name) {
-        localStorage.setItem(`statsync_cache_${this.data.project.name}`, JSON.stringify(this.data));
+        // Project-specific cache
+        if (this.data.project?.name) {
+          localStorage.setItem(`statsync_cache_${this.data.project.name}`, JSON.stringify(this.data));
+        }
+      } catch (e) {
+        console.error("Failed to save StatSync cache", e);
       }
     }
   }
@@ -55,6 +70,10 @@ export class StatSyncReader {
         try {
           const text = e.target?.result as string;
           this.data = JSON.parse(text) as StatSyncProject;
+          if (this.data) {
+            if (!Array.isArray(this.data.statistics)) this.data.statistics = [];
+            if (!Array.isArray(this.data.tables)) this.data.tables = [];
+          }
           this.sourceType = DataSourceType.FILE;
           this.notifyUpdate();
           resolve(this.data);
@@ -90,8 +109,8 @@ export class StatSyncReader {
       const status = await response.json();
       if (!status.active) throw new Error("Server not active");
 
-      // Initial load
-      await this.refresh();
+      // Initial load - force notify to trigger UI updates and document link syncs on startup
+      await this.refresh(true);
       this.sourceType = DataSourceType.SERVER;
       this.isLive = true;
 
@@ -103,7 +122,7 @@ export class StatSyncReader {
     }
   }
 
-  public async refresh(): Promise<void> {
+  public async refresh(force: boolean = false): Promise<void> {
     try {
       const response = await fetch(`${this.serverUrl}/stats`);
       if (!response.ok) throw new Error("Failed to fetch stats");
@@ -116,14 +135,34 @@ export class StatSyncReader {
 
       this.isLive = true;
 
+      let droppedSomething = false;
+      let destroyed = (newData as any).destroyed_projects;
+      if (destroyed) {
+        if (!Array.isArray(destroyed)) destroyed = [destroyed];
+        destroyed.forEach((p: string) => {
+          if (localStorage.getItem(`statsync_cache_${p}`)) {
+            localStorage.removeItem(`statsync_cache_${p}`);
+            droppedSomething = true;
+          }
+        });
+      }
+
       // Check if data actually changed
       const newHash = JSON.stringify(newData.generated_at);
       const oldHash = this.data
         ? JSON.stringify(this.data.generated_at)
         : null;
 
-      if (newHash !== oldHash) {
-        this.data = newData;
+      if (force || newHash !== oldHash || droppedSomething) {
+        if (this.data === null || this.data.project?.name !== (newData as any).project?.name) {
+             this.data = newData;
+        } else if (newHash !== oldHash) {
+             this.data = newData;
+        }
+        
+        // If the current active project was destroyed, but the server is now serving "StatSync Project" empty state:
+        // Well, newData will just be the empty state, so `this.data = newData` is correct.
+        
         this.notifyUpdate();
       }
     } catch (err) {
@@ -203,6 +242,100 @@ export class StatSyncReader {
     if (this.data) {
       this.saveToCache();
       this.onUpdateCallbacks.forEach((cb) => cb(this.data!, this.isLive));
+    }
+  }
+
+  // --- Project Directory Mappings ---
+  getDirectoryMapping(dir: string): string | null {
+    if (!this.isStorageAvailable()) return null;
+    try {
+      const mappingsStr = localStorage.getItem("statsync_directory_mappings");
+      if (mappingsStr) {
+        const mappings = JSON.parse(mappingsStr);
+        return mappings[dir] || null;
+      }
+    } catch (e) {
+      console.error("Failed to parse directory mappings", e);
+    }
+    return null;
+  }
+
+  setDirectoryMapping(dir: string, projectName: string): void {
+    if (!this.isStorageAvailable()) return;
+    try {
+      const mappingsStr = localStorage.getItem("statsync_directory_mappings");
+      let mappings: Record<string, string> = {};
+      if (mappingsStr) {
+        try {
+          mappings = JSON.parse(mappingsStr);
+        } catch (e) {
+          console.error("Failed to parse directory mappings for saving", e);
+        }
+      }
+      mappings[dir] = projectName;
+      localStorage.setItem("statsync_directory_mappings", JSON.stringify(mappings));
+    } catch (e) {
+      console.error("Failed to set directory mapping", e);
+    }
+  }
+
+  // --- Cached Projects List ---
+  getCachedProjects(): string[] {
+    const projects: {name: string, time: number}[] = [];
+    if (!this.isStorageAvailable()) return [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("statsync_cache_")) {
+          const projectName = key.replace("statsync_cache_", "");
+          if (projectName) {
+            let time = 0;
+            try {
+              const dataStr = localStorage.getItem(key);
+              if (dataStr) {
+                const data = JSON.parse(dataStr);
+                if (data.generated_at) {
+                  time = new Date(data.generated_at).getTime();
+                }
+              }
+            } catch (err) {
+              // Ignore parsing errors for individual projects
+            }
+            projects.push({ name: projectName, time });
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to get cached projects", e);
+    }
+    
+    // Sort descending by time (most recent first)
+    projects.sort((a, b) => b.time - a.time);
+    return projects.map(p => p.name);
+  }
+
+  // --- Saved Connection Settings ---
+  saveConnectionSettings(url: string, mode: "live" | "offline"): void {
+    if (!this.isStorageAvailable()) return;
+    try {
+      localStorage.setItem("statsync_server_url", url);
+      localStorage.setItem("statsync_connection_mode", mode);
+    } catch (e) {
+      console.error("Failed to save connection settings", e);
+    }
+  }
+
+  getConnectionSettings(): { url: string; mode: "live" | "offline" } {
+    if (!this.isStorageAvailable()) {
+      return { url: "http://localhost:8877", mode: "offline" };
+    }
+    try {
+      const url = localStorage.getItem("statsync_server_url") || "http://localhost:8877";
+      const mode = (localStorage.getItem("statsync_connection_mode") || "offline") as "live" | "offline";
+      return { url, mode };
+    } catch (e) {
+      console.error("Failed to get connection settings", e);
+      return { url: "http://localhost:8877", mode: "offline" };
     }
   }
 

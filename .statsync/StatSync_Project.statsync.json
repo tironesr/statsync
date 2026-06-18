@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "StatSync Project",
+    "r_version": "4.4.3",
+    "hash": null
+  },
+  "generated_at": "2026-06-15T16:38:32-0700",
+  "options": {
+    "style": "apa7",
+    "decimal_places": 2,
+    "leading_zero": true,
+    "thousands_separator": false
+  },
+  "statistics": [
+    {
+      "id": "t_test_1_10_.result",
+      "label": "t.test(1:10)",
+      "group": "t.test(1:10)",
+      "type": "t_test",
+      "formatted": "{i}t{/i}(9) = 5.74, {i}p{/i} < .001, {i}d{/i} = 1.82, 95% CI [3.33, 7.67]",
+      "formatted_parts": {
+        "t": "5.74",
+        "df": "9",
+        "p": "< .001",
+        "d": "1.82",
+        "ci_lower": "3.33",
+        "ci_upper": "7.67"
+      },
+      "raw": {
+        "statistic": 5.7446,
+        "df": 9,
+        "p_value": 0.0003,
+        "estimate": 5.5,
+        "conf_int": [3.3341, 7.6659],
+        "cohens_d": 1.8166,
+        "method": "One Sample t-test"
+      },
+      "context": []
+    }
+  ],
+  "tables": []
+}

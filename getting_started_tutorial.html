@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started with StatSync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --text-main: #1f2937;
+            --text-light: #4b5563;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        h1, h2, h3 {
+            color: var(--text-main);
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            color: var(--primary-dark);
+            margin-top: 0;
+            font-weight: 700;
+        }
+        h2 {
+            font-size: 1.75rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5em;
+        }
+        p, li {
+            color: var(--text-light);
+            margin-bottom: 1em;
+        }
+        .note {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .note p { 
+            margin: 0; 
+            color: #1e3a8a; 
+            font-weight: 500;
+        }
+        code {
+            background-color: #f1f5f9;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #ef4444;
+        }
+        pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .image-container {
+            margin: 2.5rem 0;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+        }
+        .image-caption {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.75rem;
+            font-style: italic;
+        }
+        .step {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Welcome to StatSync!</h1>
+    <p style="text-align: center; font-size: 1.1rem;">Welcome to the pilot program for StatSync! StatSync is a revolutionary tool that seamlessly connects your R statistical analyses directly to your Microsoft Word documents. No more copy-pasting values or manually updating tables when your data changes.</p>
+    
+    <p style="text-align: center; margin-bottom: 3rem;">This guide will walk you through setting up StatSync on your university-managed laptop and using its core features.</p>
+
+    <h2>1. Installation</h2>
+    <p>To get started, we need to install two things: the StatSync Add-in for Word, and the StatSync package for R.</p>
+
+    <div class="note">
+        <p><strong>Note:</strong> Because university laptops often have restricted app stores, we will "sideload" the add-in using a manifest file provided by the project lead (<code>statsync_manifest_beta.xml</code>).</p>
+    </div>
+
+    <h3>Step 1: Install the StatSync Add-in for Word</h3>
+    <p>Depending on whether you use a Mac or Windows computer, follow the corresponding instructions below.</p>
+
+    <div class="step">
+        <h3>Option A: Word for Mac (Desktop)</h3>
+        <ol>
+            <li>Open <strong>Finder</strong> on your Mac.</li>
+            <li>Press <code>Cmd + Shift + G</code> (or click <strong>Go &gt; Go to Folder...</strong> in the top Apple menu bar).</li>
+            <li>Paste the following path exactly and press Enter:<br>
+               <code>~/Library/Containers/com.microsoft.Word/Data/Documents/</code></li>
+            <li>Look for a folder named <strong><code>wef</code></strong> in this directory. If it does not exist, right-click, create a new folder, and name it <code>wef</code>.</li>
+            <li>Copy the <strong><code>statsync_manifest_beta.xml</code></strong> file you received and paste it inside the <code>wef</code> folder.</li>
+            <li>Open <strong>Microsoft Word for Mac</strong>.</li>
+            <li>Go to the <strong>Insert</strong> tab, click the drop-down arrow next to <strong>My Add-ins</strong>, and click <strong>StatSync</strong> under <strong>Developer Add-ins</strong>.</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3>Option B: Word for Windows (Desktop)</h3>
+        <ol>
+            <li>Open your <strong>Documents</strong> folder and create a new folder named <strong><code>OfficeAddins</code></strong>.</li>
+            <li>Copy the <strong><code>statsync_manifest_beta.xml</code></strong> file and paste it inside this <code>OfficeAddins</code> folder.</li>
+            <li>Right-click the <code>OfficeAddins</code> folder, select <strong>Properties</strong>, go to the <strong>Sharing</strong> tab, and click <strong>Share...</strong>.</li>
+            <li>Select your username (or "Everyone"), click <strong>Add</strong>, then click <strong>Share</strong>. Copy the resulting <strong>Network Path</strong> (e.g., <code>\\YOUR-LAPTOP\OfficeAddins</code>).</li>
+            <li>Open desktop <strong>Word for Windows</strong>.</li>
+            <li>Click <strong>File &gt; Options &gt; Trust Center &gt; Trust Center Settings... &gt; Trusted Add-in Catalogs</strong>.</li>
+            <li>In the <strong>Catalog URL</strong> box, paste the Network Path, click <strong>Add Catalog</strong>, and check the <strong>Show in Menu</strong> checkbox next to it.</li>
+            <li>Click <strong>OK</strong>, restart Microsoft Word, and navigate to <strong>Insert &gt; My Add-ins &gt; Shared Folder</strong> to select and load <strong>StatSync</strong>.</li>
+        </ol>
+    </div>
+
+    <h3>Step 2: Install the StatSync R Package</h3>
+    <p>Open <strong>RStudio</strong> and run the following command in the console to install the R package. This will pull the latest version directly from GitHub.</p>
+
+<pre><code># Install the remotes package if you don't have it
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+
+# Install StatSync directly from GitHub
+remotes::install_github("tironesr/statsync")</code></pre>
+
+    <div class="image-container">
+        <img src="r_console_install_1781236324611.png" alt="Screenshot of installing StatSync via RStudio console">
+        <div class="image-caption">Fig 1: Installing the StatSync package directly from GitHub in RStudio.</div>
+    </div>
+
+    <h2>2. Connecting R to Word</h2>
+    <p>StatSync works by creating a bridge between your R session and your Word document.</p>
+
+    <ol>
+        <li><strong>Start the StatSync Server in R:</strong><br>
+           In your R script, load the library and run <code>sync_serve()</code> with your project name. This function continuously runs in the background, listening for new statistical objects you export.
+<pre><code>library(statsync)
+
+# Start the server for your current project
+sync_serve(project_name = "My Pilot Study")</code></pre>
+        </li>
+        <li><strong>Connect in Word:</strong><br>
+           Click the StatSync Add-in button in the Word ribbon to open the taskpane. You should see the connection status switch to <strong>Connected</strong> when R is running.
+        </li>
+    </ol>
+
+    <div class="image-container">
+        <img src="word_taskpane_1781236335817.png" alt="Screenshot of the StatSync taskpane in Microsoft Word">
+        <div class="image-caption">Fig 2: The StatSync taskpane in Word showing a live connection to your R project.</div>
+    </div>
+
+    <h2>3. The Core Features</h2>
+
+    <h3>Exporting Statistics from R</h3>
+    <p>In your R script, use the <code>sync_export()</code> function to send your statistical results (t-tests, ANOVAs, correlation matrices, etc.) to Word. StatSync automatically formats the results into APA style!</p>
+
+    <p>The <code>sync_export()</code> function is your multi-purpose tool for getting models into StatSync. You can use it for:</p>
+    <ol>
+        <li><strong>Initial Export</strong>: Adding a new model to your project for the first time.</li>
+        <li><strong>Updating</strong>: Automatically replacing an existing model if you run the code again after your data changes.</li>
+        <li><strong>File Backups</strong>: Passing a <code>file = "..."</code> argument to dump your entire active session memory into a single portable JSON file for safe keeping.</li>
+    </ol>
+
+<pre><code># Example 1: Export or update a model to the live server
+result <- t.test(mpg ~ am, data = mtcars)
+sync_export(sync_stats(result, id_prefix = "mpg_ttest", label = "T-test for MPG by Transmission"))
+
+# Example 2: Snapshot your entire active server session to a file
+sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
+
+    <h3>Inserting Statistics into Word</h3>
+    <ol>
+        <li>In the StatSync Word taskpane, look for the object you just exported (e.g., <code>mpg_ttest</code>).</li>
+        <li>Place your cursor in the Word document where you want the statistic to appear.</li>
+        <li>Click <strong>Insert</strong> next to the object in the taskpane. The APA-formatted statistic will be inserted directly into your text.</li>
+    </ol>
+
+    <h3>Handling Updates and Re-Syncs</h3>
+    <p>If you realize you made a mistake in your data or need to re-run your analysis, simply run the <code>sync_export()</code> command in R again with the same object name (<code>mpg_ttest</code>).</p>
+    <ul>
+        <li>Click the <strong>Refresh</strong> button in the Word taskpane to fetch the latest values (if they haven't refreshed automatically).</li>
+        <li>In your Word document, any previously inserted text for <code>mpg_ttest</code> will <strong>automatically update</strong> to reflect the new numbers!</li>
+    </ul>
+
+    <h3>Multi-Project Workflows</h3>
+    <p>StatSync supports working on multiple papers or projects at once.</p>
+    <ul>
+        <li>Use the <strong>Project Dropdown</strong> at the top of the Word taskpane to switch between different workspaces.</li>
+        <li>When you start your server in R, specify the project you want to work on (<code>sync_serve("Another Paper")</code>).</li>
+        <li>You can dynamically switch projects without restarting the server using <code>sync_switch("Another Paper")</code>.</li>
+        <li>You can check your current connection status and active project at any time using <code>sync_check()</code>.</li>
+        <li>The taskpane will organize your exported statistics by project, keeping everything tidy.</li>
+    </ul>
+
+    <h3>"Live" vs. "Offline" Modes</h3>
+    <div class="note">
+        <p><strong>Tip:</strong> StatSync saves your most recent data, so you don't always need R open to write your paper!</p>
+    </div>
+    <ul>
+        <li><strong>Live Mode:</strong> When <code>sync_serve()</code> is running in R, the Word add-in is "Live". You can export new statistics and see them instantly in Word.</li>
+        <li><strong>Offline Mode:</strong> If you close R, the Word add-in goes into "Offline" mode. You can still see all your previously exported statistics in the taskpane and insert them into your document. The values are safely cached in Word. When you reopen R and run <code>sync_serve()</code>, the add-in will automatically reconnect and go back to Live Mode.</li>
+    </ul>
+
+    <h2>Troubleshooting</h2>
+    <ul>
+        <li><strong>Server won't connect:</strong> Ensure that <code>sync_serve()</code> is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press <code>Esc</code> (Windows) or the <code>Stop</code> sign in RStudio.</li>
+        <li><strong>Values aren't updating:</strong> Click the <strong>Refresh</strong> button in the Word taskpane to ensure it pulls the latest data from R.</li>
+    </ul>
+
+    <hr style="margin: 3rem 0; border: none; border-top: 1px solid var(--border);">
+
+    <h2>Command Reference</h2>
+
+    <h3>Server & Project Management</h3>
+    <ul>
+        <li><strong><code>sync_serve("Project Name")</code></strong>: Starts the background server and binds it to a specific project.</li>
+        <li><strong><code>sync_switch("New Project")</code></strong>: Instantly switches your active project and loads its saved data into memory.</li>
+        <li><strong><code>sync_check()</code></strong>: Prints the current server status (Online/Offline) and active project name.</li>
+        <li><strong><code>sync_stop()</code></strong>: Stops the background server and releases the port.</li>
+    </ul>
+
+    <h3>Exporting Data</h3>
+    <ul>
+        <li><strong><code>sync_export(model, ...)</code></strong>: The primary function to send statistical models (like <code>lm</code>, <code>t.test</code>, <code>anova</code>) to the Word Add-in. If the model already exists, it updates it.</li>
+        <li><strong><code>sync_export(file = "backup.json")</code></strong>: Snapshots the entire active project memory into a portable JSON file.</li>
+    </ul>
+
+    <h3>Formatting</h3>
+    <ul>
+        <li><strong><code>sync_stats(model, id_prefix, label)</code></strong>: Advanced usage. Explicitly formats a single statistical model before exporting it.</li>
+        <li><strong><code>sync_regression_table(...)</code></strong>: Advanced usage. Formats multiple regression models into a single publication-ready table.</li>
+    </ul>
+
+    <h3>Data Management</h3>
+    <ul>
+        <li><strong><code>sync_delete("model_id")</code></strong>: Removes a specific model from your active project memory.</li>
+        <li><strong><code>sync_clear()</code></strong>: Wipes all models from the current active project memory.</li>
+        <li><strong><code>sync_destroy("Project Name")</code></strong>: Permanently deletes a project's JSON file from your computer and clears it from active memory.</li>
+    </ul>
+
+</div>
+
+</body>
+</html>

@@ -133,7 +133,11 @@ export function assembleFormatted(
 
       case "chi_sq":
         if (selectedFields.includes("df") && parts["df"]) {
-          pieces.push(`χ²(${parts["df"]}) = ${value}`);
+          if (parts["N"]) {
+            pieces.push(`χ²(${parts["df"]}, {i}N{/i} = ${parts["N"]}) = ${value}`);
+          } else {
+            pieces.push(`χ²(${parts["df"]}) = ${value}`);
+          }
         } else {
           pieces.push(`χ² = ${value}`);
         }

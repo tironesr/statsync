@@ -4,7 +4,16 @@
 \alias{fmt_t}
 \title{Format a t-test result (standalone t-test)}
 \usage{
-fmt_t(t_value, df, p, d = NULL, digits = 2, markup = TRUE)
+fmt_t(
+  t_value,
+  df,
+  p,
+  d = NULL,
+  ci_lower = NULL,
+  ci_upper = NULL,
+  digits = 2,
+  markup = TRUE
+)
 }
 \arguments{
 \item{t_value}{t statistic}

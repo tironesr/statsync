@@ -14,6 +14,7 @@ import { AutocompleteMonitor } from "../services/autocomplete-monitor";
 let reader: StatSyncReader;
 let inserter: WordInserter;
 let autocompleteMonitor: AutocompleteMonitor;
+let docDir: string | null = null;
 
 // Track the state of each model card's UI
 interface CardState {
@@ -29,6 +30,8 @@ let activeTypeFilter: string | null = "none";
 let isAutoSyncPaused: boolean = false;
 let isConnected: boolean = false;
 let isManualSyncing: boolean = false;
+let isSyncing: boolean = false;
+let lastProjectName: string | null = null;
 let linkedProjectName: string | null = null;
 let hasSyncedThisConnection: boolean = false;
 
@@ -40,11 +43,125 @@ let resultHideTimer: any = null;
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Word) {
-    initialize();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        initialize().catch((err) => console.error("Initialization failed:", err));
+      });
+    } else {
+      initialize().catch((err) => console.error("Initialization failed:", err));
+    }
   }
 });
 
-function initialize(): void {
+async function getDocumentDirectory(): Promise<string | null> {
+  return new Promise((resolve) => {
+    try {
+      Office.context.document.getFilePropertiesAsync((result) => {
+        if (result.status === Office.AsyncResultStatus.Succeeded && result.value && result.value.url) {
+          const url = result.value.url;
+          try {
+            const decodedUrl = decodeURIComponent(url);
+            const standardized = decodedUrl.replace(/\\/g, "/");
+            const lastSlash = standardized.lastIndexOf("/");
+            if (lastSlash !== -1) {
+              let dir = standardized.substring(0, lastSlash);
+              dir = dir.replace(/^file:\/\/\//i, "").replace(/^file:\/\//i, "");
+              resolve(dir);
+              return;
+            }
+          } catch (e) {
+            console.error("Failed to parse document URL:", e);
+          }
+        }
+        resolve(null);
+      });
+    } catch (e) {
+      console.warn("Failed to get document file properties:", e);
+      resolve(null);
+    }
+  });
+}
+
+function populateProjectDropdown(): void {
+  const select = document.getElementById("project-select") as HTMLSelectElement;
+  if (!select) return;
+
+  // Clear existing options, keep placeholder
+  select.innerHTML = '<option value="">-- Select or link a project --</option>';
+
+  const projects = reader.getCachedProjects();
+  projects.forEach((proj) => {
+    const opt = document.createElement("option");
+    opt.value = proj;
+    opt.textContent = proj;
+    if (proj === linkedProjectName) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+
+  const btnRemoveProject = document.getElementById("btn-remove-project") as HTMLButtonElement;
+  if (btnRemoveProject) {
+    btnRemoveProject.style.display = select.value ? "block" : "none";
+  }
+}
+
+async function attemptServerConnection(urlToConnect?: string): Promise<void> {
+  const btnLive = document.getElementById("btn-connect-server") as HTMLButtonElement;
+  const serverConfig = document.getElementById("server-config")!;
+  const serverUrlInput = document.getElementById("server-url") as HTMLInputElement;
+  
+  const url = urlToConnect || (serverUrlInput ? serverUrlInput.value : "") || "http://localhost:8877";
+  
+  if (btnLive) {
+    btnLive.innerHTML = '<span class="live-dot" style="background: var(--warning)"></span> Connecting...';
+    btnLive.disabled = true;
+  }
+  setStatus("Connecting to R server...", "info");
+
+  try {
+    const connected = await reader.connectToServer(url);
+    if (connected) {
+      reader.startPolling(500);
+      showPanels();
+      setStatus("Connected to R (live)", "success");
+      if (btnLive) {
+        btnLive.innerHTML = '<span class="live-dot"></span> Live';
+        btnLive.className = "btn btn-success";
+      }
+      if (serverConfig) serverConfig.style.display = "none";
+      isConnected = true;
+      
+      // Persist settings
+      reader.saveConnectionSettings(url, "live");
+    } else {
+      setStatus("Failed to connect. Is sync_serve() running in R?", "error");
+      if (btnLive) {
+        btnLive.innerHTML = '<span class="live-dot"></span> Offline';
+        btnLive.className = "btn btn-live";
+      }
+      if (serverConfig) serverConfig.style.display = "flex";
+      isConnected = false;
+      
+      // Persist connection mode as offline
+      reader.saveConnectionSettings(url, "offline");
+    }
+  } catch (err) {
+    setStatus(`Connection error: ${err}`, "error");
+    if (btnLive) {
+      btnLive.innerHTML = '<span class="live-dot"></span> Offline';
+      btnLive.className = "btn btn-live";
+    }
+    if (serverConfig) serverConfig.style.display = "flex";
+    isConnected = false;
+    
+    reader.saveConnectionSettings(url, "offline");
+  } finally {
+    if (btnLive) btnLive.disabled = false;
+  }
+}
+
+async function initialize(): Promise<void> {
   // --- Service Worker Registration for Offline Mode ---
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
@@ -56,18 +173,28 @@ function initialize(): void {
   inserter = new WordInserter();
   autocompleteMonitor = new AutocompleteMonitor();
 
-  setupEventHandlers();
   setupAutocomplete();
 
-  // Load project binding from Word document memory
+  // Load project binding from Word document memory or directory mapping
   try {
-    linkedProjectName = Office.context.document.settings.get("StatSyncLinkedProject");
+    docDir = await getDocumentDirectory();
+    if (docDir) {
+      linkedProjectName = reader.getDirectoryMapping(docDir);
+    }
+    
+    if (!linkedProjectName) {
+      linkedProjectName = Office.context.document.settings.get("StatSyncLinkedProject");
+    }
+    
     if (linkedProjectName) {
       reader.loadFromCache(linkedProjectName);
     }
   } catch (e) {
-    console.warn("Failed to load document settings:", e);
+    console.warn("Failed to load document settings/directory mapping:", e);
   }
+
+  setupEventHandlers();
+  populateProjectDropdown();
 
   reader.onUpdate(async (data, isLive) => {
     // 1. Update internal connection state
@@ -76,7 +203,11 @@ function initialize(): void {
     if (!isConnected) hasSyncedThisConnection = false; // Reset for next connect
 
     // 2. Project Memory & Binding
-    const incomingProject = data.project.name || "Untitled";
+    const incomingProject = data.project?.name || "Untitled";
+    if (docDir && incomingProject !== "Untitled") {
+      reader.setDirectoryMapping(docDir, incomingProject);
+    }
+
     if (!linkedProjectName && incomingProject !== "Untitled") {
       // First project seen, link it to this document
       linkedProjectName = incomingProject;
@@ -85,12 +216,14 @@ function initialize(): void {
     } else if (linkedProjectName && linkedProjectName !== incomingProject) {
       // BLOCKER: This document belongs to a different project
       setStatus(`⚠️ Linked to '${linkedProjectName}', current is '${incomingProject}'`, "error");
-      renderAll(data);
       updateStatus(data, true);
       const btnManualSync = document.getElementById("btn-manual-sync") as HTMLElement;
       if (btnManualSync) btnManualSync.style.display = "none"; // Hide sync button to prevent wrong data
+      populateProjectDropdown();
       return; // Skip data processing
     }
+
+    populateProjectDropdown();
 
     // 3. ALWAYS feed stats to monitor for {{ autocomplete
     const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
@@ -148,6 +281,13 @@ function initialize(): void {
     // 7. Update the sidebar UI immediately
     renderAll(data);
 
+    if (isSyncing) {
+      console.log("Document sync already in progress, skipping...");
+      return;
+    }
+
+    isSyncing = true;
+
     // 8. Doc Sync Logic: Update Word document tags
     try {
       let docRes = { updated: 0, failed: 0, unchanged: 0 };
@@ -155,11 +295,11 @@ function initialize(): void {
       // AUTO-UPDATE ON LOAD: If we just established a live connection, perform a full sync
       if (isConnected && (!hasSyncedThisConnection || wasOffline)) {
         hasSyncedThisConnection = true;
-        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id), (id) => reader.getTable(id));
         showUpdateResult(docRes, undefined, added, deleted);
       } else if (isConnected && !isAutoSyncPaused) {
         // Normal auto-sync while working
-        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+        docRes = await inserter.updateAllLinks((id) => reader.getStatistic(id), (id) => reader.getTable(id));
         showUpdateResult(docRes, undefined, added, deleted);
       } else {
         // Show existing structural changes only
@@ -167,6 +307,8 @@ function initialize(): void {
       }
     } catch (e) {
       console.error("Sync update failed:", e);
+    } finally {
+      isSyncing = false;
     }
   });
 
@@ -185,6 +327,23 @@ function initialize(): void {
     const statsArray = Array.isArray(initialData.statistics) ? initialData.statistics : [];
     autocompleteMonitor.setStatistics(statsArray);
     autocompleteMonitor.start();
+  }
+
+  // Update button state initially to Offline on cold start
+  const btnLiveInit = document.getElementById("btn-connect-server");
+  if (btnLiveInit) {
+    btnLiveInit.innerHTML = '<span class="live-dot"></span> Offline';
+    btnLiveInit.className = "btn btn-live";
+  }
+
+  // Auto-connect if connection settings are "live"
+  const connSettings = reader.getConnectionSettings();
+  const serverUrlInput = document.getElementById("server-url") as HTMLInputElement;
+  if (serverUrlInput && connSettings.url) {
+    serverUrlInput.value = connSettings.url;
+  }
+  if (connSettings.mode === "live") {
+    attemptServerConnection(connSettings.url);
   }
 }
 
@@ -221,41 +380,6 @@ function setupEventHandlers(): void {
   const btnLive = document.getElementById("btn-connect-server") as HTMLButtonElement;
   const serverConfig = document.getElementById("server-config")!;
   const btnServerGo = document.getElementById("btn-server-go") as HTMLButtonElement;
-  const serverUrlInput = document.getElementById("server-url") as HTMLInputElement;
-
-  async function attemptServerConnection(): Promise<void> {
-    const url = serverUrlInput.value || "http://localhost:8877";
-    btnLive.innerHTML = '<span class="live-dot" style="background: var(--warning)"></span> Connecting...';
-    btnLive.disabled = true;
-    setStatus("Connecting to R server...", "info");
-
-    try {
-      const connected = await reader.connectToServer(url);
-      if (connected) {
-        reader.startPolling(500);
-        showPanels();
-        setStatus("Connected to R (live)", "success");
-        btnLive.innerHTML = '<span class="live-dot"></span> Live';
-        btnLive.className = "btn btn-success";
-        serverConfig.style.display = "none";
-        isConnected = true;
-      } else {
-        setStatus("Failed to connect. Is sync_serve() running in R?", "error");
-        btnLive.innerHTML = '<span class="live-dot"></span> Live';
-        btnLive.className = "btn btn-live";
-        serverConfig.style.display = "flex";
-        isConnected = false;
-      }
-    } catch (err) {
-      setStatus(`Connection error: ${err}`, "error");
-      btnLive.innerHTML = '<span class="live-dot"></span> Live';
-      btnLive.className = "btn btn-live";
-      serverConfig.style.display = "flex";
-      isConnected = false;
-    } finally {
-      btnLive.disabled = false;
-    }
-  }
 
   btnLive.onclick = async (e) => {
     e.preventDefault();
@@ -274,6 +398,66 @@ function setupEventHandlers(): void {
     e.stopPropagation();
     await attemptServerConnection();
   };
+
+  // Project selector dropdown dropdown
+  const select = document.getElementById("project-select") as HTMLSelectElement;
+  const btnRemoveProject = document.getElementById("btn-remove-project") as HTMLButtonElement;
+
+  if (select) {
+    select.onchange = () => {
+      const selected = select.value;
+      if (btnRemoveProject) {
+        btnRemoveProject.style.display = selected ? "block" : "none";
+      }
+
+      if (selected) {
+        linkedProjectName = selected;
+        Office.context.document.settings.set("StatSyncLinkedProject", selected);
+        Office.context.document.settings.saveAsync();
+
+        if (docDir) {
+          reader.setDirectoryMapping(docDir, selected);
+        }
+
+        reader.loadFromCache(selected);
+        const data = reader.getData();
+        if (data) {
+          renderAll(data);
+          updateStatus(data, true);
+          const statsArray = Array.isArray(data.statistics) ? data.statistics : [];
+          autocompleteMonitor.setStatistics(statsArray);
+        } else {
+          document.getElementById("models-list")!.innerHTML = '<div class="empty-state">No statistics cached for this project. Connect to server or load file.</div>';
+          document.getElementById("tables-list")!.innerHTML = '<div class="empty-state">No tables cached.</div>';
+          const tablesPanel = document.getElementById("tables-panel");
+          if (tablesPanel) tablesPanel.style.display = "none";
+          setStatus(`Project '${selected}' loaded (no cached data)`, "info");
+        }
+      } else {
+        linkedProjectName = null;
+        Office.context.document.settings.remove("StatSyncLinkedProject");
+        Office.context.document.settings.saveAsync();
+        const tablesPanel = document.getElementById("tables-panel");
+        if (tablesPanel) tablesPanel.style.display = "none";
+        setStatus("Project link cleared", "info");
+      }
+    };
+  }
+
+  if (btnRemoveProject) {
+    btnRemoveProject.onclick = (e) => {
+      e.preventDefault();
+      const selected = select.value;
+      if (selected && confirm(`Remove offline cache for project '${selected}'?`)) {
+        localStorage.removeItem(`statsync_cache_${selected}`);
+        populateProjectDropdown();
+        if (linkedProjectName === selected) {
+          select.value = "";
+          select.dispatchEvent(new Event("change"));
+        }
+      }
+    };
+  }
 
   // Search
   const searchInput = document.getElementById("search-input") as HTMLInputElement;
@@ -344,7 +528,7 @@ function setupEventHandlers(): void {
 
     try {
       if (isConnected) {
-        await reader.refresh();
+        await reader.refresh(true);
       }
 
       const newData = reader.getData();
@@ -362,7 +546,7 @@ function setupEventHandlers(): void {
       }
 
       // Explicitly update Word document tags
-      const res = await inserter.updateAllLinks((id) => reader.getStatistic(id));
+      const res = await inserter.updateAllLinks((id) => reader.getStatistic(id), (id) => reader.getTable(id));
       showUpdateResult(res, undefined, added, deleted);
       setStatus("✓ Sync complete", "success");
     } catch (err) {
@@ -394,12 +578,15 @@ function openAutocompleteDialog(triggerText: string): void {
 
   // Share statistics data with the dialog via localStorage
   const allStats = reader.getData()?.statistics || [];
-  localStorage.setItem("statsync_dialog_data", JSON.stringify(allStats));
-
-  // Pass the typed search query (everything after {{)
-  const queryMatch = triggerText.match(/\{\{([^}]*)/);
-  const query = queryMatch ? queryMatch[1].trim() : "";
-  localStorage.setItem("statsync_dialog_prefill", query);
+  try {
+    localStorage.setItem("statsync_dialog_data", JSON.stringify(allStats));
+    // Pass the typed search query (everything after {{)
+    const queryMatch = triggerText.match(/\{\{([^}]*)/);
+    const query = queryMatch ? queryMatch[1].trim() : "";
+    localStorage.setItem("statsync_dialog_prefill", query);
+  } catch (e) {
+    console.error("Failed to set localStorage items for dialog", e);
+  }
 
   // Open the dialog
   const url = new URL("dialog.html", window.location.href).href;
@@ -439,7 +626,18 @@ function handleDialogEvent(arg: any): void {
 }
 
 async function handleDialogMessage(arg: any): Promise<void> {
-  const data = JSON.parse(arg.message);
+  let data;
+  try {
+    data = JSON.parse(arg.message);
+  } catch (err) {
+    console.error("Failed to parse dialog message:", err);
+    if (dialog) { dialog.close(); }
+    dialog = null;
+    autocompleteMonitor.ignoreCurrent();
+    autocompleteMonitor.dismiss();
+    setTimeout(() => { autocompleteMonitor.start(); }, 1000);
+    return;
+  }
 
   if (data.action === "cancel") {
     if (dialog) { dialog.close(); }
@@ -458,29 +656,34 @@ async function handleDialogMessage(arg: any): Promise<void> {
     if (stat) {
       const statToInsert: StatisticEntry = { ...stat };
 
-      const storedCustom = localStorage.getItem("statsync_dialog_custom_formatted");
-      if (storedCustom && storedCustom.length > 0) {
-        statToInsert.formatted = storedCustom;
-        localStorage.removeItem("statsync_dialog_custom_formatted");
-      } else if (data.customFormatted && data.customFormatted.length > 0) {
-        statToInsert.formatted = data.customFormatted;
+      let storedCustom = null;
+      let storedFields = null;
+      try {
+        storedCustom = localStorage.getItem("statsync_dialog_custom_formatted");
+        if (storedCustom) {
+          localStorage.removeItem("statsync_dialog_custom_formatted");
+        }
+        storedFields = localStorage.getItem("statsync_dialog_custom_fields");
+        if (storedFields) {
+          localStorage.removeItem("statsync_dialog_custom_fields");
+        }
+      } catch (e) {
+        console.error("Failed to read/clear dialog custom formatting from localStorage", e);
       }
 
-      const storedFields = localStorage.getItem("statsync_dialog_custom_fields");
-      if (storedFields) {
-        Office.context.document.settings.set(`statsync_format_${stat.id}`, storedFields);
-        Office.context.document.settings.saveAsync();
-        localStorage.removeItem("statsync_dialog_custom_fields");
-      } else {
-        Office.context.document.settings.remove(`statsync_format_${stat.id}`);
-        Office.context.document.settings.saveAsync();
+      if (storedCustom && storedCustom.length > 0) {
+        statToInsert.formatted = storedCustom;
+      } else if (data.customFormatted && data.customFormatted.length > 0) {
+        statToInsert.formatted = data.customFormatted;
       }
 
       try {
         await inserter.replaceTextAndInsert(
           currentReplaceText,
           statToInsert,
-          "full"
+          "full",
+          undefined,
+          storedFields || undefined
         );
         setStatus(`✓ Inserted: ${stat.label}`, "success");
       } catch (err) {
@@ -511,8 +714,14 @@ function showPanels(): void {
 }
 
 function renderAll(data: StatSyncProject): void {
+  const currentProjectName = data.project?.name || null;
+  if (currentProjectName !== lastProjectName) {
+    cardStates.clear();
+    lastProjectName = currentProjectName;
+  }
   renderFilterChips(data);
   renderModelCards(data);
+  renderTables(data);
   filterModels();
 }
 
@@ -553,6 +762,61 @@ function renderFilterChips(data: StatSyncProject): void {
       filterModels();
     });
     container.appendChild(chip);
+  });
+}
+
+function renderTables(data: StatSyncProject): void {
+  const container = document.getElementById("tables-list");
+  const panel = document.getElementById("tables-panel");
+  if (!container || !panel) return;
+
+  container.innerHTML = "";
+
+  const tablesArray = Array.isArray(data.tables) ? data.tables : [];
+  if (tablesArray.length === 0) {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+
+  tablesArray.forEach((table) => {
+    const item = document.createElement("div");
+    item.className = "table-item";
+
+    const info = document.createElement("div");
+    info.className = "table-item-info";
+
+    const caption = document.createElement("div");
+    caption.className = "table-item-caption";
+    caption.textContent = table.caption || "Table";
+    info.appendChild(caption);
+
+    const meta = document.createElement("div");
+    meta.className = "table-item-meta";
+    const numRows = table.rows.length;
+    const numCols = table.rows[0]?.cells.length || (table.headers[0]?.length || 0);
+    meta.textContent = `${numRows} rows × ${numCols} columns`;
+    info.appendChild(meta);
+
+    item.appendChild(info);
+
+    const btn = document.createElement("button");
+    btn.className = "btn btn-small btn-primary";
+    btn.textContent = "Insert";
+    btn.addEventListener("click", async () => {
+      setStatus(`Inserting table: ${table.caption || "Table"}...`, "info");
+      try {
+        await inserter.insertTable(table);
+        setStatus(`✓ Inserted table: ${table.caption || "Table"}`, "success");
+      } catch (err) {
+        console.error("Failed to insert table:", err);
+        setStatus(`Failed to insert table: ${err}`, "error");
+      }
+    });
+    item.appendChild(btn);
+
+    container.appendChild(item);
   });
 }
 
@@ -605,7 +869,7 @@ function createModelCard(groupName: string, stats: StatisticEntry[]): HTMLElemen
     <span class="model-card-icon">${config.icon}</span>
     <div class="model-card-info">
       <div class="model-card-title">${escapeHtml(groupName)}</div>
-      <div class="model-card-subtitle">${subtitle}</div>
+      <div class="model-card-subtitle">${escapeHtml(subtitle)}</div>
     </div>
     <span class="model-card-badge">${stats.length}</span>
   `;
@@ -745,10 +1009,14 @@ function updateStatus(data: StatSyncProject, isOfflineOrPaused: boolean = false)
   if (projectNameEl) {
     const current = data.project?.name || "Untitled";
     if (linkedProjectName && linkedProjectName !== current && isConnected) {
-      projectNameEl.innerHTML = `⚠️ <span style="color:var(--danger)">Wrong Project: ${current}</span> (Expected: ${linkedProjectName})`;
+      projectNameEl.innerHTML = `⚠️ <span style="color:var(--error)">Wrong Project: ${escapeHtml(current)}</span> (Expected: ${escapeHtml(linkedProjectName)})`;
     } else {
-      projectNameEl.textContent = linkedProjectName || current;
-      if (!isConnected) projectNameEl.innerHTML += " <small>(Offline)</small>";
+      const name = linkedProjectName || current;
+      if (!isConnected) {
+        projectNameEl.innerHTML = `${escapeHtml(name)} <small>(Offline)</small>`;
+      } else {
+        projectNameEl.textContent = name;
+      }
     }
   }
 

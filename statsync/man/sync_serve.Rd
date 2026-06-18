@@ -5,24 +5,25 @@
 \title{Start a local server for live sync with Word}
 \usage{
 sync_serve(
-  collection = NULL,
-  port = 8877,
   project_name = "StatSync Project",
-  open_browser = FALSE
+  ...,
+  port = 8877,
+  open_browser = FALSE,
+  daemon = TRUE
 )
 }
 \arguments{
-\item{collection}{A statsync_collection or path to .statsync.json}
-
-\item{port}{Port number (default: 8877)}
-
 \item{project_name}{Name for the project shown in the Word add-in sidebar
 (default: "StatSync Project")}
+
+\item{...}{Raw statistical models or statsync objects}
+
+\item{port}{Port number (default: 8877)}
 
 \item{open_browser}{Open browser to debug panel}
 }
 \value{
-Invisible server object. Also creates \code{sync_update()} and
+Invisible server object. Also creates \code{sync_export()} and
 \code{sync_stop()} functions in the global environment.
 }
 \description{
@@ -30,7 +31,7 @@ Launches a tiny HTTP server that the Word add-in can poll for updates.
 Useful during interactive analysis.
 }
 \details{
-After calling \code{sync_serve()}, use \code{sync_update()} to push new
+After calling \code{sync_serve()}, use \code{sync_export()} to push new
 data to the server, and \code{sync_stop()} to stop the server.
 }
 \examples{
@@ -44,6 +45,6 @@ sync_serve(
 
 # Later, after re-fitting the model:
 model2 <- lm(mpg ~ wt, data = mtcars)
-sync_update(sync_stats(model2, label = "MPG Model"))
+sync_export(sync_stats(model2, label = "MPG Model"))
 }
 }

@@ -12,6 +12,7 @@ interface TextSegment {
   text: string;
   italic: boolean;
   bold: boolean;
+  subscript: boolean;
 }
 
 export class WordInserter {
@@ -19,16 +20,17 @@ export class WordInserter {
 
   /**
    * Parse markup tags into formatted segments.
-   * Handles {i}...{/i} for italic and {b}...{/b} for bold.
+   * Handles {i}...{/i} for italic, {b}...{/b} for bold, and {sub}...{/sub} for subscript.
    */
   parseMarkup(input: string): TextSegment[] {
     const segments: TextSegment[] = [];
     let remaining = input;
     let currentItalic = false;
     let currentBold = false;
+    let currentSubscript = false;
 
     // Regex to find the next tag
-    const tagRegex = /\{(\/?)([ib])\}/;
+    const tagRegex = /\{(\/?)(i|b|sub)\}/;
 
     while (remaining.length > 0) {
       const match = tagRegex.exec(remaining);
@@ -40,6 +42,7 @@ export class WordInserter {
             text: remaining,
             italic: currentItalic,
             bold: currentBold,
+            subscript: currentSubscript,
           });
         }
         break;
@@ -51,6 +54,7 @@ export class WordInserter {
           text: remaining.substring(0, match.index),
           italic: currentItalic,
           bold: currentBold,
+          subscript: currentSubscript,
         });
       }
 
@@ -62,6 +66,8 @@ export class WordInserter {
         currentItalic = !isClosing;
       } else if (tagType === "b") {
         currentBold = !isClosing;
+      } else if (tagType === "sub") {
+        currentSubscript = !isClosing;
       }
 
       // Move past the tag
@@ -74,7 +80,12 @@ export class WordInserter {
       if (seg.text.length === 0) continue;
 
       const last = merged[merged.length - 1];
-      if (last && last.italic === seg.italic && last.bold === seg.bold) {
+      if (
+        last &&
+        last.italic === seg.italic &&
+        last.bold === seg.bold &&
+        last.subscript === seg.subscript
+      ) {
         last.text += seg.text;
       } else {
         merged.push({ ...seg });
@@ -88,7 +99,7 @@ export class WordInserter {
    * Strip markup tags for plain text.
    */
   stripMarkup(input: string): string {
-    return input.replace(/\{\/?(i|b)\}/g, "");
+    return input.replace(/\{\/?(i|b|sub)\}/g, "");
   }
 
   /**
@@ -97,22 +108,24 @@ export class WordInserter {
   async insertStatistic(
     stat: StatisticEntry,
     mode: "full" | "part" = "full",
-    partKey?: string
+    partKey?: string,
+    context?: Word.RequestContext,
+    customFormatJson?: string
   ): Promise<void> {
-    await Word.run(async (context) => {
-      const range = context.document.getSelection();
+    const execute = async (ctx: Word.RequestContext) => {
+      const range = ctx.document.getSelection();
 
       const rawText =
         mode === "full"
           ? stat.formatted
-          : stat.formatted_parts[partKey!] || stat.formatted;
+          : stat.formatted_parts?.[partKey!] || stat.formatted;
 
       const segments = this.parseMarkup(rawText);
       const plainText = this.stripMarkup(rawText);
 
       // Insert a content control first
       const cc = range.insertContentControl();
-      cc.tag = `statsync:${stat.id}${mode === "part" ? ":" + partKey : ""}`;
+      cc.tag = `statsync:${stat.id}:${mode === "part" ? partKey : "full"}:${customFormatJson || ""}`;
       cc.title = stat.label;
       cc.appearance = Word.ContentControlAppearance.hidden;
       cc.color = "#4CAF50";
@@ -127,14 +140,13 @@ export class WordInserter {
         // Apply formatting
         insertedRange.font.italic = segment.italic;
         insertedRange.font.bold = segment.bold;
+        insertedRange.font.subscript = segment.subscript;
         insertedRange.font.name = "Times New Roman";
         insertedRange.font.size = 12;
       }
 
       // Move cursor to the end of the inserted content control so user can keep typing
       cc.getRange(Word.RangeLocation.after).select();
-
-      await context.sync();
 
       // Track the link
       this.links.links.push({
@@ -145,16 +157,41 @@ export class WordInserter {
         last_value: plainText,
         last_synced: new Date().toISOString(),
       });
-    });
+    };
+
+    if (context) {
+      await execute(context);
+    } else {
+      await Word.run(async (ctx) => {
+        await execute(ctx);
+        await ctx.sync();
+      });
+    }
   }
 
   /**
    * Insert a publication-ready table at the cursor.
    */
-  async insertTable(tableData: TableEntry): Promise<void> {
-    await Word.run(async (context) => {
-      const range = context.document.getSelection();
-      const body = context.document.body;
+  async insertTable(
+    tableData: TableEntry,
+    targetCc?: Word.ContentControl,
+    context?: Word.RequestContext
+  ): Promise<void> {
+    const execute = async (ctx: Word.RequestContext) => {
+      let insertionTarget: any;
+      if (targetCc) {
+        targetCc.clear();
+        insertionTarget = targetCc;
+      } else {
+        const range = ctx.document.getSelection();
+        const cc = range.insertContentControl();
+        cc.tag = `statsync:table:${tableData.id}`;
+        cc.title = tableData.caption || "StatSync Table";
+        // @ts-ignore
+        cc.appearance = Word.ContentControlAppearance.boundingTags;
+        cc.color = "#4CAF50";
+        insertionTarget = cc;
+      }
 
       const allHeaders = tableData.headers.flat();
       const numCols = tableData.rows[0]?.cells.length || allHeaders.length;
@@ -162,11 +199,13 @@ export class WordInserter {
       const numDataRows = tableData.rows.length;
       const totalRows = numHeaderRows + numDataRows;
 
+      let tableInsertionTarget = insertionTarget;
+
       // Insert caption (APA style)
       if (tableData.caption) {
-        const captionPara = range.insertParagraph(
+        const captionPara = insertionTarget.insertParagraph(
           "",
-          Word.InsertLocation.before
+          Word.InsertLocation.end
         );
         const tableLabel = captionPara.insertText(
           "Table ",
@@ -185,14 +224,14 @@ export class WordInserter {
         captionText.font.name = "Times New Roman";
 
         captionPara.spaceAfter = 6;
+        tableInsertionTarget = captionPara;
       }
 
       // Create the table
-      const table = body.insertTable(
+      const table = tableInsertionTarget.insertTable(
         totalRows,
         numCols,
-        Word.InsertLocation.end,
-        [[]]
+        Word.InsertLocation.after
       );
 
       const fontSize = tableData.style?.font_size || 10;
@@ -205,8 +244,6 @@ export class WordInserter {
       // APA borders
       if (tableData.style?.apa_table) {
         table.getBorder(Word.BorderLocation.all).type = Word.BorderType.none;
-        // Top and bottom heavy borders would be set here
-        // Word JS API has limited border control
       }
 
       // Fill header rows
@@ -237,7 +274,16 @@ export class WordInserter {
             }
 
             cell.horizontalAlignment = Word.Alignment.centered;
-            colIdx += header.span || 1;
+            
+            // Handle spanning
+            const span = header.span || 1;
+            if (span > 1 && colIdx + span - 1 < numCols) {
+               const startCell = table.getCell(headerIdx, colIdx);
+               const endCell = table.getCell(headerIdx, colIdx + span - 1);
+               startCell.merge(endCell);
+            }
+            
+            colIdx += span;
           }
         }
       }
@@ -278,25 +324,14 @@ export class WordInserter {
           if (cellIdx > 0) {
             cell.horizontalAlignment = Word.Alignment.centered;
           }
-
-          // Track linked cells
-          if (cellData.stat_id) {
-            this.links.links.push({
-              stat_id: cellData.stat_id,
-              bookmark_name: `table:${tableData.id}:${tableRowIdx}:${cellIdx}`,
-              insert_mode: "part",
-              last_value: this.stripMarkup(cellData.value || ""),
-              last_synced: new Date().toISOString(),
-            });
-          }
         }
       }
 
       // Table note
       if (tableData.note) {
-        const noteParaRange = table.insertParagraph(
+        const noteParaRange = insertionTarget.insertParagraph(
           "",
-          Word.InsertLocation.after
+          Word.InsertLocation.end
         );
 
         const noteLabel = noteParaRange.insertText(
@@ -315,16 +350,27 @@ export class WordInserter {
         noteText.font.size = fontSize - 1;
         noteText.font.name = fontFamily;
       }
+    };
 
-      await context.sync();
-    });
+    if (context) {
+      await execute(context);
+    } else if (targetCc) {
+      await execute(targetCc.context as Word.RequestContext);
+      await targetCc.context.sync();
+    } else {
+      await Word.run(async (ctx) => {
+        await execute(ctx);
+        await ctx.sync();
+      });
+    }
   }
 
   /**
    * Update all linked statistics in the document.
    */
   async updateAllLinks(
-    getStatistic: (id: string) => StatisticEntry | undefined
+    getStatistic: (id: string) => StatisticEntry | undefined,
+    getTable?: (id: string) => TableEntry | undefined
   ): Promise<{ updated: number; failed: number; unchanged: number }> {
     const result = { updated: 0, failed: 0, unchanged: 0 };
 
@@ -343,7 +389,25 @@ export class WordInserter {
 
         const tagParts = cc.tag.replace("statsync:", "").split(":");
         const statId = tagParts[0];
+        
+        if (statId === "table") {
+          const tableId = tagParts[1];
+          if (!getTable) continue;
+          const tableData = getTable(tableId);
+          if (!tableData) continue;
+
+          try {
+            await this.insertTable(tableData, cc, context);
+            result.updated++;
+          } catch (e) {
+            console.error("Failed to update table:", e);
+            result.failed++;
+          }
+          continue;
+        }
+
         const partKey = tagParts[1];
+        const customFormatJson = tagParts.slice(2).join(":");
 
         const stat = getStatistic(statId);
         if (!stat) {
@@ -363,20 +427,16 @@ export class WordInserter {
         }
 
         let rawText = stat.formatted;
-        if (partKey) {
-          rawText = stat.formatted_parts[partKey] || stat.formatted;
-        } else {
-          // Check if custom format config exists in Word Document Settings
-          const customFieldsStr = Office.context.document.settings.get(`statsync_format_${statId}`);
-          if (customFieldsStr) {
-            try {
-              const fields = JSON.parse(customFieldsStr);
-              const config = getFieldConfig(stat.type);
-              rawText = assembleFormatted(stat, fields, config.assemblyOrder);
-            } catch (e) {
-              console.error("Failed to assemble custom format:", e);
-              rawText = stat.formatted;
-            }
+        if (partKey && partKey !== "full" && partKey !== "") {
+          rawText = stat.formatted_parts?.[partKey] || stat.formatted;
+        } else if (customFormatJson) {
+          try {
+            const fields = JSON.parse(customFormatJson);
+            const config = getFieldConfig(stat.type);
+            rawText = assembleFormatted(stat, fields, config.assemblyOrder);
+          } catch (e) {
+            console.error("Failed to assemble custom format from tag:", e);
+            rawText = stat.formatted;
           }
         }
 
@@ -396,6 +456,7 @@ export class WordInserter {
 
           insertedRange.font.italic = segment.italic;
           insertedRange.font.bold = segment.bold;
+          insertedRange.font.subscript = segment.subscript;
           insertedRange.font.name = "Times New Roman";
           insertedRange.font.size = 12;
         }
@@ -418,7 +479,8 @@ export class WordInserter {
     triggerText: string,
     stat: StatisticEntry,
     mode: "full" | "part" = "full",
-    partKey?: string
+    partKey?: string,
+    customFormatJson?: string
   ): Promise<void> {
     await Word.run(async (context) => {
       const selection = context.document.getSelection();
@@ -440,13 +502,13 @@ export class WordInserter {
       // Find the trigger text at the end of the text before cursor
       const triggerIndex = textBefore.lastIndexOf(triggerText);
       if (triggerIndex === -1) {
-        // Fallback: just insert at cursor
-        await this.insertStatistic(stat, mode, partKey);
+        // Fallback: just insert at cursor (using shared context)
+        await this.insertStatistic(stat, mode, partKey, context, customFormatJson);
         return;
       }
 
-      // Search for the trigger text in the paragraph and delete it
-      const searchResults = paragraph.search(triggerText, {
+      // Search for the trigger text in the range before cursor and delete it
+      const searchResults = rangeBeforeCursor.search(triggerText, {
         matchCase: true,
         matchWholeWord: false,
       });
@@ -461,14 +523,14 @@ export class WordInserter {
         const rawText =
           mode === "full"
             ? stat.formatted
-            : stat.formatted_parts[partKey!] || stat.formatted;
+            : stat.formatted_parts?.[partKey!] || stat.formatted;
 
         const segments = this.parseMarkup(rawText);
         const plainText = this.stripMarkup(rawText);
 
         // Replace the trigger text with a content control
         const cc = targetRange.insertContentControl();
-        cc.tag = `statsync:${stat.id}${mode === "part" ? ":" + partKey : ""}`;
+        cc.tag = `statsync:${stat.id}:${mode === "part" ? partKey : "full"}:${customFormatJson || ""}`;
         cc.title = stat.label;
         cc.appearance = Word.ContentControlAppearance.hidden;
         cc.color = "#4CAF50";
@@ -480,6 +542,7 @@ export class WordInserter {
 
           insertedRange.font.italic = segment.italic;
           insertedRange.font.bold = segment.bold;
+          insertedRange.font.subscript = segment.subscript;
           insertedRange.font.name = "Times New Roman";
           insertedRange.font.size = 12;
         }
@@ -499,7 +562,8 @@ export class WordInserter {
           last_synced: new Date().toISOString(),
         });
       } else {
-        // Fallback: if search didn't find it, insert at cursor
+        // Fallback: if search didn't find it, insert at cursor (using shared context)
+        await this.insertStatistic(stat, mode, partKey, context);
         await context.sync();
       }
     });

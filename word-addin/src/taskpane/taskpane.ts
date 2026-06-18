@@ -444,16 +444,35 @@ function setupEventHandlers(): void {
     };
   }
 
+  let deleteConfirmTimeout: any = null;
   if (btnRemoveProject) {
     btnRemoveProject.onclick = (e) => {
       e.preventDefault();
       const selected = select.value;
       if (selected) {
-        localStorage.removeItem(`statsync_cache_${selected}`);
-        populateProjectDropdown();
-        if (linkedProjectName === selected) {
-          select.value = "";
-          select.dispatchEvent(new Event("change"));
+        if (btnRemoveProject.innerHTML.includes("Confirm")) {
+          // Second click: delete
+          localStorage.removeItem(`statsync_cache_${selected}`);
+          populateProjectDropdown();
+          if (linkedProjectName === selected) {
+            select.value = "";
+            select.dispatchEvent(new Event("change"));
+          }
+          btnRemoveProject.innerHTML = "🗑️";
+          btnRemoveProject.style.backgroundColor = "";
+          btnRemoveProject.style.color = "";
+          if (deleteConfirmTimeout) clearTimeout(deleteConfirmTimeout);
+        } else {
+          // First click: prompt for confirm
+          btnRemoveProject.innerHTML = "Confirm Delete";
+          btnRemoveProject.style.backgroundColor = "var(--error)";
+          btnRemoveProject.style.color = "white";
+          if (deleteConfirmTimeout) clearTimeout(deleteConfirmTimeout);
+          deleteConfirmTimeout = setTimeout(() => {
+            btnRemoveProject.innerHTML = "🗑️";
+            btnRemoveProject.style.backgroundColor = "";
+            btnRemoveProject.style.color = "";
+          }, 3000);
         }
       }
     };

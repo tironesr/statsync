@@ -90,9 +90,15 @@ The `sync_export()` function is your multi-purpose tool for getting models into 
 3. **File Backups**: Passing a `file = "..."` argument to dump your entire active session memory into a single portable JSON file for safe keeping.
 
 ```R
-# Example 1: Export or update a model to the live server
-result <- t.test(mpg ~ am, data = mtcars)
-sync_export(sync_stats(result, id_prefix = "mpg_ttest", label = "T-test for MPG by Transmission"))
+# Example 1: Export one or more models to the live server at the same time
+ttest_result <- t.test(mpg ~ am, data = mtcars)
+anova_result <- aov(mpg ~ cyl, data = mtcars)
+
+sync_export(
+  # The 'label' argument sets the display name shown in the Word taskpane
+  sync_stats(ttest_result, label = "T-test for MPG by Transmission"),
+  sync_stats(anova_result, label = "ANOVA for MPG by Cylinders")
+)
 
 # Example 2: Snapshot your entire active server session to a file
 sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")

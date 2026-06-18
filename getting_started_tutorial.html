@@ -233,7 +233,6 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
     <h3>Multi-Project Workflows</h3>
     <p>StatSync supports working on multiple papers or projects at once.</p>
     <ul>
-        <li>Use the <strong>Project Dropdown</strong> at the top of the Word taskpane to switch between different workspaces.</li>
         <li>When you start your server in R, specify the project you want to work on (<code>sync_serve("Another Paper")</code>).</li>
         <li>You can dynamically switch projects without restarting the server using <code>sync_switch("Another Paper")</code>.</li>
         <li>You can check your current connection status and active project at any time using <code>sync_check()</code>.</li>
@@ -252,6 +251,7 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
     <ul>
         <li><strong>Live Mode:</strong> When <code>sync_serve()</code> is running in R, the Word add-in is "Live". You can export new statistics and see them instantly in Word.</li>
         <li><strong>Offline Mode:</strong> If you close R, the Word add-in goes into "Offline" mode. You can still see all your previously exported statistics in the taskpane and insert them into your document. The values are safely cached in Word. When you reopen R and run <code>sync_serve()</code>, the add-in will automatically reconnect and go back to Live Mode.</li>
+        <li><strong>Offline Project Switching:</strong> Use the <strong>Project Dropdown</strong> at the top of the Word taskpane to switch between different workspaces. Since the add-in automatically follows the live R server, you can only manually switch projects when in Offline mode.</li>
     </ul>
 
     <h2>Troubleshooting</h2>

@@ -226,8 +226,8 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
     <h3>Handling Updates and Re-Syncs</h3>
     <p>If you realize you made a mistake in your data or need to re-run your analysis, simply run the <code>sync_export()</code> command in R again with the same object name (<code>mpg_ttest</code>).</p>
     <ul>
-        <li>Click the <strong>Refresh</strong> button in the Word taskpane to fetch the latest values (if they haven't refreshed automatically).</li>
         <li>In your Word document, any previously inserted text for <code>mpg_ttest</code> will <strong>automatically update</strong> to reflect the new numbers!</li>
+        <li>If the values haven't refreshed automatically, you can manually trigger a sync by clicking <strong>Pause Automatic Syncing</strong> and then <strong>Sync All Updates</strong> in the Word taskpane.</li>
     </ul>
 
     <h3>Multi-Project Workflows</h3>
@@ -258,7 +258,7 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
     <ul>
         <li><strong>Server won't connect:</strong> Ensure that <code>sync_serve()</code> is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press <code>Esc</code> (Windows) or the <code>Stop</code> sign in RStudio, or run <code>sync_stop()</code>.</li>
         <li><strong>"Port 8877 is already in use" Error:</strong> If <code>sync_serve()</code> gives this error, but <code>sync_stop()</code> says no server is running, an invisible background R session has crashed and is holding the port. Run <code>sync_free_port()</code> in your console to automatically find and kill the zombie process.</li>
-        <li><strong>Values aren't updating:</strong> Click the <strong>Refresh</strong> button in the Word taskpane to ensure it pulls the latest data from R.</li>
+        <li><strong>Values aren't updating:</strong> Click <strong>Pause Automatic Syncing</strong> and then <strong>Sync All Updates</strong> in the Word taskpane to ensure it pulls the latest data from R.</li>
     </ul>
 
 </div>

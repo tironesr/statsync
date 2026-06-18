@@ -112,9 +112,8 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")
 
 ### Handling Updates and Re-Syncs
 If you realize you made a mistake in your data or need to re-run your analysis, simply run the `sync_export()` command in R again with the same object name (`mpg_ttest`).
-
-- Click the **Refresh** button in the Word taskpane to fetch the latest values (if they haven't refreshed automatically).
 - In your Word document, any previously inserted text for `mpg_ttest` will **automatically update** to reflect the new numbers!
+- If the values haven't refreshed automatically, you can manually trigger a sync by clicking **Pause Automatic Syncing** and then **Sync All Updates** in the Word taskpane.
 
 ### Multi-Project Workflows
 StatSync supports working on multiple papers or projects at once. 
@@ -143,4 +142,4 @@ StatSync supports working on multiple papers or projects at once.
 
 - **Server won't connect:** Ensure that `sync_serve()` is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press `Esc` (Windows) or the `Stop` sign in RStudio, or run `sync_stop()`.
 - **"Port 8877 is already in use" Error:** If `sync_serve()` gives this error, but `sync_stop()` says no server is running, an invisible background R session has crashed and is holding the port. Run `sync_free_port()` in your console to automatically find and kill the zombie process.
-- **Values aren't updating:** Click the **Refresh** button in the Word taskpane to ensure it pulls the latest data from R.
+- **Values aren't updating:** Click **Pause Automatic Syncing** and then **Sync All Updates** in the Word taskpane to ensure it pulls the latest data from R.

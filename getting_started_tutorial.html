@@ -259,7 +259,7 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
 
     <h2>Troubleshooting</h2>
     <ul>
-        <li><strong>Server won't connect:</strong> Ensure that <code>sync_serve()</code> is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press <code>Esc</code> (Windows) or the <code>Stop</code> sign in RStudio, or run <code>sync_stop()</code>.</li>
+        <li><strong>Server won't connect:</strong> Ensure that <code>sync_serve()</code> has been run in your current R session. The server runs silently in the background, allowing you to continue writing code. You can stop it at any time by running <code>sync_stop()</code>.</li>
         <li><strong>"Port 8877 is already in use" Error:</strong> If <code>sync_serve()</code> gives this error, but <code>sync_stop()</code> says no server is running, an invisible background R session has crashed and is holding the port. Run <code>sync_free_port()</code> in your console to automatically find and kill the zombie process.</li>
         <li><strong>Values aren't updating:</strong> Click <strong>Pause Automatic Syncing</strong> and then <strong>Sync All Updates</strong> in the Word taskpane to ensure it pulls the latest data from R.</li>
     </ul>

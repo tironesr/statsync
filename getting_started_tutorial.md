@@ -140,6 +140,6 @@ StatSync supports working on multiple papers or projects at once.
 
 ## Troubleshooting
 
-- **Server won't connect:** Ensure that `sync_serve()` is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press `Esc` (Windows) or the `Stop` sign in RStudio, or run `sync_stop()`.
+- **Server won't connect:** Ensure that `sync_serve()` has been run in your current R session. The server runs silently in the background, allowing you to continue writing code. You can stop it at any time by running `sync_stop()`.
 - **"Port 8877 is already in use" Error:** If `sync_serve()` gives this error, but `sync_stop()` says no server is running, an invisible background R session has crashed and is holding the port. Run `sync_free_port()` in your console to automatically find and kill the zombie process.
 - **Values aren't updating:** Click **Pause Automatic Syncing** and then **Sync All Updates** in the Word taskpane to ensure it pulls the latest data from R.

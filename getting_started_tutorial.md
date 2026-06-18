@@ -108,6 +108,7 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")
 1. In the StatSync Word taskpane, make sure you are connected to your server and your project is active.
 2. Place your cursor in the Word document where you want the statistic to appear.
 3. Type `{{` to open the auto-complete menu. Select your statistic from the list (or type to search for it), and it will be inserted directly into your text in APA format!
+4. **Pro Tip:** You can customize the exact elements included in the output for each statistical test (e.g., removing the p-value or effect size) by pressing the **Right Arrow** key on a specific test (not the whole model) in the auto-complete menu.
 
 ### Handling Updates and Re-Syncs
 If you realize you made a mistake in your data or need to re-run your analysis, simply run the `sync_export()` command in R again with the same object name (`mpg_ttest`).

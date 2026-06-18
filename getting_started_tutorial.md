@@ -118,6 +118,11 @@ StatSync supports working on multiple papers or projects at once.
 - You can check your current connection status and active project at any time using `sync_check()`.
 - The taskpane will organize your exported statistics by project, keeping everything tidy.
 
+> [!IMPORTANT]
+> **Project Auto-Follow:** The Word Add-in is designed to automatically follow whichever project is currently active on your live R server. 
+> 
+> If you have multiple Word documents open and you switch the active project in your R console using `sync_serve()` or `sync_switch()`, your Word Add-ins will detect the switch and **automatically change their active project to match the server**. This means if you have a model named `mod1` in two different documents, it will update according to the project that is currently active in R, regardless of which document you are looking at.
+
 ### "Live" vs. "Offline" Modes
 > [!TIP]
 > StatSync saves your most recent data, so you don't always need R open to write your paper!
@@ -129,28 +134,6 @@ StatSync supports working on multiple papers or projects at once.
 
 ## Troubleshooting
 
-- **Server won't connect:** Ensure that `sync_serve()` is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press `Esc` (Windows) or the `Stop` sign in RStudio.
+- **Server won't connect:** Ensure that `sync_serve()` is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press `Esc` (Windows) or the `Stop` sign in RStudio, or run `sync_stop()`.
+- **"Port 8877 is already in use" Error:** If `sync_serve()` gives this error, but `sync_stop()` says no server is running, an invisible background R session has crashed and is holding the port. Run `sync_free_port()` in your console to automatically find and kill the zombie process.
 - **Values aren't updating:** Click the **Refresh** button in the Word taskpane to ensure it pulls the latest data from R.
-
----
-
-## Command Reference
-
-### Server & Project Management
-- **`sync_serve("Project Name")`**: Starts the background server and binds it to a specific project.
-- **`sync_switch("New Project")`**: Instantly switches your active project and loads its saved data into memory.
-- **`sync_check()`**: Prints the current server status (Online/Offline) and active project name.
-- **`sync_stop()`**: Stops the background server and releases the port.
-
-### Exporting Data
-- **`sync_export(model, ...)`**: The primary function to send statistical models (like `lm`, `t.test`, `anova`) to the Word Add-in. If the model already exists, it updates it.
-- **`sync_export(file = "backup.json")`**: Snapshots the entire active project memory into a portable JSON file.
-
-### Formatting
-- **`sync_stats(model, id_prefix, label)`**: Advanced usage. Explicitly formats a single statistical model before exporting it.
-- **`sync_regression_table(...)`**: Advanced usage. Formats multiple regression models into a single publication-ready table.
-
-### Data Management
-- **`sync_delete("model_id")`**: Removes a specific model from your active project memory.
-- **`sync_clear()`**: Wipes all models from the current active project memory.
-- **`sync_destroy("Project Name")`**: Permanently deletes a project's JSON file from your computer and clears it from active memory.

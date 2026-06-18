@@ -240,6 +240,11 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
         <li>The taskpane will organize your exported statistics by project, keeping everything tidy.</li>
     </ul>
 
+    <div class="note" style="border-left-color: #f1c40f; background-color: #fdfae6;">
+        <p><strong>⚠️ Project Auto-Follow:</strong> The Word Add-in is designed to automatically follow whichever project is currently active on your live R server. </p>
+        <p>If you have multiple Word documents open and you switch the active project in your R console using <code>sync_serve()</code> or <code>sync_switch()</code>, your Word Add-ins will detect the switch and <strong>automatically change their active project to match the server</strong>. This means if you have a model named <code>mod1</code> in two different documents, it will update according to the project that is currently active in R, regardless of which document you are looking at.</p>
+    </div>
+
     <h3>"Live" vs. "Offline" Modes</h3>
     <div class="note">
         <p><strong>Tip:</strong> StatSync saves your most recent data, so you don't always need R open to write your paper!</p>
@@ -251,39 +256,9 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")</code></pre>
 
     <h2>Troubleshooting</h2>
     <ul>
-        <li><strong>Server won't connect:</strong> Ensure that <code>sync_serve()</code> is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press <code>Esc</code> (Windows) or the <code>Stop</code> sign in RStudio.</li>
+        <li><strong>Server won't connect:</strong> Ensure that <code>sync_serve()</code> is running in the R console. R will be "busy" while the server is running. To stop the server and write more code, press <code>Esc</code> (Windows) or the <code>Stop</code> sign in RStudio, or run <code>sync_stop()</code>.</li>
+        <li><strong>"Port 8877 is already in use" Error:</strong> If <code>sync_serve()</code> gives this error, but <code>sync_stop()</code> says no server is running, an invisible background R session has crashed and is holding the port. Run <code>sync_free_port()</code> in your console to automatically find and kill the zombie process.</li>
         <li><strong>Values aren't updating:</strong> Click the <strong>Refresh</strong> button in the Word taskpane to ensure it pulls the latest data from R.</li>
-    </ul>
-
-    <hr style="margin: 3rem 0; border: none; border-top: 1px solid var(--border);">
-
-    <h2>Command Reference</h2>
-
-    <h3>Server & Project Management</h3>
-    <ul>
-        <li><strong><code>sync_serve("Project Name")</code></strong>: Starts the background server and binds it to a specific project.</li>
-        <li><strong><code>sync_switch("New Project")</code></strong>: Instantly switches your active project and loads its saved data into memory.</li>
-        <li><strong><code>sync_check()</code></strong>: Prints the current server status (Online/Offline) and active project name.</li>
-        <li><strong><code>sync_stop()</code></strong>: Stops the background server and releases the port.</li>
-    </ul>
-
-    <h3>Exporting Data</h3>
-    <ul>
-        <li><strong><code>sync_export(model, ...)</code></strong>: The primary function to send statistical models (like <code>lm</code>, <code>t.test</code>, <code>anova</code>) to the Word Add-in. If the model already exists, it updates it.</li>
-        <li><strong><code>sync_export(file = "backup.json")</code></strong>: Snapshots the entire active project memory into a portable JSON file.</li>
-    </ul>
-
-    <h3>Formatting</h3>
-    <ul>
-        <li><strong><code>sync_stats(model, id_prefix, label)</code></strong>: Advanced usage. Explicitly formats a single statistical model before exporting it.</li>
-        <li><strong><code>sync_regression_table(...)</code></strong>: Advanced usage. Formats multiple regression models into a single publication-ready table.</li>
-    </ul>
-
-    <h3>Data Management</h3>
-    <ul>
-        <li><strong><code>sync_delete("model_id")</code></strong>: Removes a specific model from your active project memory.</li>
-        <li><strong><code>sync_clear()</code></strong>: Wipes all models from the current active project memory.</li>
-        <li><strong><code>sync_destroy("Project Name")</code></strong>: Permanently deletes a project's JSON file from your computer and clears it from active memory.</li>
     </ul>
 
 </div>

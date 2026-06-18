@@ -75,7 +75,7 @@ StatSync works by creating a bridge between your R session and your Word documen
 
 2. **Connect in Word:**
    - Click the StatSync Add-in button in the Word ribbon to open the taskpane.
-   - You should see the connection status switch to **Connected** when R is running.
+   - You should see the connection status switch to **Connected** when R is running. If it still says **Offline**, you can click it and then press **Connect** to manually initiate the connection.
 
 ---
 

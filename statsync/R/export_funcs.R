@@ -309,11 +309,25 @@ sync_free_port <- function() {
   os <- .Platform$OS.type
   
   if (os == "windows") {
-    out <- suppressWarnings(system(sprintf("netstat -ano | findstr :%d", port), intern = TRUE))
+    out <- suppressWarnings(system("netstat -ano", intern = TRUE))
+    out <- out[grepl(sprintf(":%d\\b", port), out)]
     if (length(out) > 0) {
-      pid <- tail(strsplit(trimws(out[1]), "\\s+")[[1]], 1)
-      system(sprintf("taskkill /PID %s /F", pid), ignore.stdout = TRUE, ignore.stderr = TRUE)
-      message(sprintf("\u2714 Successfully killed orphaned background process (PID %s) holding port %d.", pid, port))
+      parts <- strsplit(trimws(out[1]), "\\s+")[[1]]
+      if (length(parts) > 0) {
+        pid <- tail(parts, 1)
+        if (as.character(Sys.getpid()) == pid) {
+          message(sprintf("\u2139 Port %d is held by the CURRENT R session.", port))
+          message("Attempting to cleanly stop servers in this session...")
+          tryCatch({
+            httpuv::stopAllServers()
+            .statsync_state$server <- NULL
+          }, error = function(e) NULL)
+          message("If the port is still locked, you may need to restart your R session.")
+        } else {
+          system(paste("taskkill /PID", pid, "/F"), ignore.stdout = TRUE, ignore.stderr = TRUE)
+          message(sprintf("\u2714 Successfully killed orphaned background process (PID %s) holding port %d.", pid, port))
+        }
+      }
     } else {
       message(sprintf("\u2139 Port %d is not currently in use.", port))
     }
@@ -321,8 +335,18 @@ sync_free_port <- function() {
     out <- suppressWarnings(system(sprintf("lsof -t -i:%d", port), intern = TRUE))
     if (length(out) > 0) {
       pid <- out[1]
-      system(sprintf("kill -9 %s", pid))
-      message(sprintf("\u2714 Successfully killed orphaned background process (PID %s) holding port %d.", pid, port))
+      if (as.character(Sys.getpid()) == pid) {
+        message(sprintf("\u2139 Port %d is held by the CURRENT R session.", port))
+        message("Attempting to cleanly stop servers in this session...")
+        tryCatch({
+          httpuv::stopAllServers()
+          .statsync_state$server <- NULL
+        }, error = function(e) NULL)
+        message("If the port is still locked, you may need to restart your R session.")
+      } else {
+        system(sprintf("kill -9 %s", pid))
+        message(sprintf("\u2714 Successfully killed orphaned background process (PID %s) holding port %d.", pid, port))
+      }
     } else {
       message(sprintf("\u2139 Port %d is not currently in use.", port))
     }

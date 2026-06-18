@@ -593,6 +593,17 @@ function openAutocompleteDialog(triggerText: string): void {
   currentReplaceText = triggerText;
   autocompleteMonitor.stop(); // pause polling while dialog is open
 
+  // Share statistics data with the dialog via localStorage
+  const allStats = reader.getData()?.statistics || [];
+  try {
+    localStorage.setItem("statsync_dialog_data", JSON.stringify(allStats));
+    const queryMatch = triggerText.match(/\{\{([^}]*)/);
+    const query = queryMatch ? queryMatch[1].trim() : "";
+    localStorage.setItem("statsync_dialog_prefill", query);
+  } catch (e) {
+    console.error("Failed to set localStorage", e);
+  }
+
   // Open the dialog
   const url = new URL("dialog.html", window.location.href).href;
 
@@ -640,15 +651,6 @@ async function handleDialogMessage(arg: any): Promise<void> {
   }
 
   if (data.action === "dialogReady") {
-    // Dialog is loaded, send the data securely via messageChild instead of localStorage
-    const allStats = reader.getData()?.statistics || [];
-    const queryMatch = currentReplaceText.match(/\{\{([^}]*)/);
-    const query = queryMatch ? queryMatch[1].trim() : "";
-    dialog?.messageChild(JSON.stringify({
-        action: "initData",
-        stats: allStats,
-        prefill: query
-    }));
     return;
   }
 

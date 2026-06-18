@@ -1,6 +1,6 @@
 # Welcome to StatSync!
 
-Welcome to the pilot program for StatSync! StatSync is a revolutionary tool that seamlessly connects your R statistical analyses directly to your Microsoft Word documents. No more copy-pasting values or manually updating tables when your data changes.
+Welcome to the pilot program for StatSync! StatSync is a tool that connects your R statistical analyses directly to your Microsoft Word documents. No more copy-pasting values or manually updating tables when your data changes.
 
 This guide will walk you through setting up StatSync on your university-managed laptop and using its core features.
 

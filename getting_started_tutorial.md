@@ -34,7 +34,7 @@ If you use Word through your web browser, follow these steps:
 4. Look for a folder named **`wef`** in this directory. If it does not exist, right-click, create a new folder, and name it `wef`.
 5. Copy the **`statsync_manifest_beta.xml`** file you received and paste it inside the `wef` folder.
 6. Open **Microsoft Word for Mac**.
-7. Go to the **Insert** tab, click the drop-down arrow next to **My Add-ins**, and click **StatSync** under **Developer Add-ins**.
+7. Go to the **Home** tab, click **Add-ins**, and click **StatSync** under the **Developer Add-ins** section.
 
 #### Option C: Word for Windows (Desktop)
 1. Open your **Documents** folder and create a new folder named **`OfficeAddins`**.
@@ -99,9 +99,9 @@ sync_export(file = "C:/Users/Tyrone/Desktop/backup.json")
 ```
 
 ### Inserting Statistics into Word
-1. In the StatSync Word taskpane, look for the object you just exported (e.g., `mpg_ttest`).
+1. In the StatSync Word taskpane, make sure you are connected to your server and your project is active.
 2. Place your cursor in the Word document where you want the statistic to appear.
-3. Click **Insert** next to the object in the taskpane. The APA-formatted statistic will be inserted directly into your text.
+3. Type `{{` to open the auto-complete menu. Select your statistic from the list (or type to search for it), and it will be inserted directly into your text in APA format!
 
 ### Handling Updates and Re-Syncs
 If you realize you made a mistake in your data or need to re-run your analysis, simply run the `sync_export()` command in R again with the same object name (`mpg_ttest`).

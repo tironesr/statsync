@@ -107,34 +107,8 @@ sync_serve <- function(project_name = "StatSync Project", ..., port = 8877,
     eval(export_call, envir = parent.frame())
   }
   
-  .statsync_state$project_name <- actual_proj
-  if (!is.null(.statsync_state$data)) {
-    .statsync_state$data$project$name <- actual_proj
-  }
-  
-  if (is.null(.statsync_state$data)) {
-    # Check if a file already exists for this project to resume session
-    safe_name <- gsub("[^a-zA-Z0-9]", "_", actual_proj)
-    file_path <- file.path(".statsync", paste0(safe_name, ".statsync.json"))
-    
-    if (file.exists(file_path)) {
-      tryCatch({
-        .statsync_state$data <- jsonlite::fromJSON(file_path, simplifyVector = TRUE, simplifyDataFrame = FALSE, simplifyMatrix = FALSE)
-        message("\u2714 Resumed previous StatSync session from disk: ", file_path)
-      }, error = function(e) {
-        warning("Failed to load previous session from disk: ", e$message)
-      })
-    }
-    
-    # Initialize empty data structure if still null
-    if (is.null(.statsync_state$data)) {
-      .statsync_state$data <- list(
-        project = list(name = actual_proj),
-        statistics = vector("list", 0),
-        tables = vector("list", 0),
-        generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z")
-      )
-    }
+  if (!identical(.statsync_state$project_name, actual_proj) || is.null(.statsync_state$data)) {
+    sync_switch(actual_proj)
   }
   
   app <- list(

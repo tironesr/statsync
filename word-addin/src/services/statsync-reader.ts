@@ -45,6 +45,10 @@ export class StatSyncReader {
     }
   }
 
+  public clearData(): void {
+    this.data = null;
+  }
+
   private saveToCache(): void {
     if (!this.isStorageAvailable()) return;
     if (this.data) {

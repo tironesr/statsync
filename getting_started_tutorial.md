@@ -82,7 +82,7 @@ StatSync works by creating a bridge between your R session and your Word documen
 ## 3. The Core Features
 
 ### Exporting Statistics from R
-In your R script, use the `sync_export()` function to send your statistical results (t-tests, ANOVAs, correlation matrices, etc.) to Word. StatSync automatically formats the results into APA style!
+In your R script, use the `sync_export()` function to send your statistical results (t-tests, ANOVAs, correlation matrices, linear and linear mixed models, etc.) to Word. StatSync automatically formats the results into APA style!
 
 The `sync_export()` function is your multi-purpose tool for getting models into StatSync. You can use it for:
 1. **Initial Export**: Adding a new model to your project for the first time.

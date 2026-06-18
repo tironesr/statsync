@@ -33,17 +33,28 @@ let currentStatForConfig: StatisticEntry | null = null;
 let currentCheckedFields = new Set<string>();
 
 Office.onReady((info) => {
-    initialize();
+    // Notify parent that the dialog is fully loaded and ready to receive data
+    Office.context.ui.messageParent(JSON.stringify({ action: "dialogReady" }));
 });
 
-function initialize(): void {
-    const raw = localStorage.getItem("statsync_dialog_data");
-    if (!raw) {
+// Add handler for incoming data from the taskpane
+Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, (arg: any) => {
+    try {
+        const data = JSON.parse(arg.message);
+        if (data.action === "initData") {
+            initialize(data.stats, data.prefill);
+        }
+    } catch (e) {
+        console.error("Failed to parse message from taskpane", e);
+    }
+});
+
+function initialize(stats: StatisticEntry[], prefill: string): void {
+    if (!stats || stats.length === 0) {
         showEmpty("No statistics available");
         return;
     }
 
-    const stats: StatisticEntry[] = JSON.parse(raw);
     const groupMap = new Map<string, StatisticEntry[]>();
     for (const stat of stats) {
         const group = stat.group || "Ungrouped";
@@ -90,8 +101,7 @@ function initialize(): void {
         searchInput.focus();
     });
 
-    const prefill = localStorage.getItem("statsync_dialog_prefill") || "";
-    if (prefill.length > 0) {
+    if (prefill && prefill.length > 0) {
         searchInput.value = prefill;
         searchClear.style.display = "block";
         const query = prefill.toLowerCase();

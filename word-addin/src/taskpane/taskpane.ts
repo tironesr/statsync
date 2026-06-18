@@ -214,13 +214,11 @@ async function initialize(): Promise<void> {
       Office.context.document.settings.set("StatSyncLinkedProject", incomingProject);
       Office.context.document.settings.saveAsync();
     } else if (linkedProjectName && linkedProjectName !== incomingProject) {
-      // BLOCKER: This document belongs to a different project
-      setStatus(`⚠️ Linked to '${linkedProjectName}', current is '${incomingProject}'`, "error");
-      updateStatus(data, true);
-      const btnManualSync = document.getElementById("btn-manual-sync") as HTMLElement;
-      if (btnManualSync) btnManualSync.style.display = "none"; // Hide sync button to prevent wrong data
-      populateProjectDropdown();
-      return; // Skip data processing
+      // Auto-follow the server's active project
+      console.log(`Server switched from ${linkedProjectName} to ${incomingProject}. Auto-switching Word Add-in.`);
+      linkedProjectName = incomingProject;
+      Office.context.document.settings.set("StatSyncLinkedProject", incomingProject);
+      Office.context.document.settings.saveAsync();
     }
 
     populateProjectDropdown();
